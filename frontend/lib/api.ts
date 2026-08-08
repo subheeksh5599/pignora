@@ -71,5 +71,10 @@ export const api = {
     call<{ repo: Repo }>("/repos/open", { method: "POST", body: JSON.stringify(body) }),
   closeout: (id: number) => call<{ repo: Repo }>(`/repos/${id}/closeout`, { method: "POST" }),
   audit: (id: number) =>
-    call<{ repoId: number; events: AuditEvent[]; travelRule: { artifact: string; note?: string } }>(`/repos/${id}/audit`),
+    call<{
+      repoId: number;
+      events: AuditEvent[];
+      travelRule: { artifact?: string; note?: string } | null;
+      artifact: { name: string; path: string; note: string };
+    }>(`/repos/${id}/audit`),
 };

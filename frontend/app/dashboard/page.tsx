@@ -2,6 +2,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { api, type AuditEvent, type Identity, type Repo } from "@/lib/api";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AlertTriangle, ExternalLink, RefreshCw, ShieldCheck, ShieldOff } from "lucide-react";
 
 const TIER3 = "0x1111111111111111111111111111111111111111";
 const TIER2 = "0x2222222222222222222222222222222222222222";
@@ -11,21 +21,20 @@ function fmt(amount: string): string {
   return (Number(amount) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 2 });
 }
 
-function StatusPill({ status }: { status: string }) {
-  const tone =
-    status === "OPEN"
-      ? "bg-emerald-100 text-emerald-800"
-      : status === "CLOSED_OUT"
-        ? "bg-rose-100 text-rose-800"
-        : "bg-neutral-100 text-neutral-700";
-  return <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${tone}`}>{status}</span>;
+function short(addr: string): string {
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
 export default function DashboardPage() {
   const [mode, setMode] = useState<string>("…");
   const [repos, setRepos] = useState<Repo[]>([]);
   const [identity, setIdentity] = useState<Identity | null>(null);
-  const [audit, setAudit] = useState<{ events: AuditEvent[]; travelRule: { artifact: string; note?: string } } | null>(null);
+  const [audit, setAudit] = useState<{
+    repoId: number;
+    events: AuditEvent[];
+    travelRule: { artifact?: string; note?: string } | null;
+    artifact: { name: string; path: string; note: string };
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -55,7 +64,7 @@ export default function DashboardPage() {
       .identity(TIER3)
       .then((id) => setIdentity(id))
       .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [refresh]);
 
   async function checkIdentity() {
@@ -66,6 +75,7 @@ export default function DashboardPage() {
       setIdentity(id);
     } catch (e) {
       setError((e as Error).message);
+      setIdentity(null);
     } finally {
       setBusy(null);
     }
@@ -136,227 +146,298 @@ export default function DashboardPage() {
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get("audit");
     if (id) showAudit(Number(id));
+     
   }, []);
 
+  const openRepos = repos.filter((r) => r.status === "OPEN").length;
+  const closedRepos = repos.length - openRepos;
+  const totalCollateral = repos.reduce((sum, r) => sum + Number(r.collateralAmount) / 1e6, 0);
+
   return (
-    <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
-      <header className="border-b border-[var(--border)] bg-white/80 px-6 py-4">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
+    <main className="min-h-screen bg-muted/40 pb-16">
+      <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div>
             <h1 className="text-lg font-semibold tracking-tight">Pignora</h1>
-            <p className="text-xs text-[var(--muted-foreground)]">
-              Compliant RWA repo rail — lending caps priced by verified identity, automatic closeout on credential events
+            <p className="text-xs text-muted-foreground">
+              Compliant RWA repo rail, lending caps priced by verified identity
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-600">
+            <Badge variant={mode === "sandbox" ? "default" : "secondary"} className="gap-1.5">
+              <ShieldCheck className="h-3 w-3" />
               Cleanverse {mode === "sandbox" ? "sandbox" : "mock"} mode
-            </span>
-            <button
-              onClick={refresh}
-              className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-neutral-50"
-            >
+            </Badge>
+            <Button variant="outline" size="sm" onClick={refresh} disabled={busy !== null}>
+              <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${busy ? "animate-spin" : ""}`} />
               Refresh
-            </button>
+            </Button>
           </div>
         </div>
       </header>
 
       <div className="mx-auto grid max-w-6xl gap-6 px-6 py-8">
         {error && (
-          <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{error}</div>
+          <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            {error}
+          </div>
         )}
 
-        <section className="rounded-xl border border-[var(--border)] bg-white p-6">
-          <h2 className="text-sm font-semibold">1 · Counterparty identity (CVI)</h2>
-          <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-            A-Pass gate: verified identity, tier, and the lending cap it sets. Unverified wallets are rejected by the rail.
-          </p>
-          <div className="mt-4 flex flex-wrap items-end gap-3">
-            <label className="flex-1 text-xs">
-              <span className="mb-1 block font-medium text-neutral-600">Borrower wallet</span>
-              <input
-                value={borrower}
-                onChange={(e) => setBorrower(e.target.value)}
-                className="w-full rounded-lg border border-[var(--border)] px-3 py-2 font-mono text-xs"
-              />
-            </label>
-            <button
-              onClick={checkIdentity}
-              disabled={busy !== null}
-              className="rounded-lg bg-neutral-900 px-4 py-2 text-xs font-medium text-white disabled:opacity-50"
-            >
-              Verify
-            </button>
-          </div>
-          {identity && (
-            <div className="mt-3 grid grid-cols-2 gap-2 rounded-lg bg-neutral-50 p-3 text-xs sm:grid-cols-5">
-              <div>
-                <div className="text-neutral-500">Status</div>
-                <div className="font-medium">{identity.status}</div>
+        {/* stats row */}
+        <div className="grid gap-4 sm:grid-cols-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Open repos</CardDescription>
+              <CardTitle className="text-2xl">{openRepos}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Closed out</CardDescription>
+              <CardTitle className="text-2xl">{closedRepos}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Collateral escrowed (BOND)</CardDescription>
+              <CardTitle className="text-2xl">{totalCollateral.toLocaleString()}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>API</CardDescription>
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <span className={`h-2 w-2 rounded-full ${mode === "sandbox" ? "bg-emerald-500" : "bg-amber-500"}`} />
+                {mode || "…"}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Counterparty identity <Badge variant="outline">CVI</Badge>
+              </CardTitle>
+              <CardDescription>
+                A-Pass gate: verified identity, tier, and the lending cap it sets. Unverified wallets are rejected by the rail.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-end gap-3">
+                <div className="flex-1 space-y-1.5">
+                  <Label htmlFor="borrower-wallet" className="text-xs text-muted-foreground">
+                    Borrower wallet
+                  </Label>
+                  <Input
+                    id="borrower-wallet"
+                    value={borrower}
+                    onChange={(e) => setBorrower(e.target.value)}
+                    className="font-mono text-xs"
+                  />
+                </div>
+                <Button onClick={checkIdentity} disabled={busy !== null}>
+                  {busy === "identity" ? "Verifying…" : "Verify"}
+                </Button>
               </div>
-              <div>
-                <div className="text-neutral-500">Tier</div>
-                <div className="font-medium">{identity.tier}</div>
+
+              {identity ? (
+                <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg border bg-muted/30 p-4 text-sm sm:grid-cols-5">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Status</p>
+                    <Badge variant={identity.verified ? "default" : "destructive"} className="mt-1">
+                      {identity.verified ? "VERIFIED" : "REJECTED"}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Tier</p>
+                    <p className="mt-1 font-semibold">{identity.tier}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Lending cap</p>
+                    <p className="mt-1 font-semibold">{(identity.haircutBps / 100).toFixed(1)}%</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">CV record</p>
+                    <p className="mt-1 truncate font-mono text-xs">{identity.cvRecordId}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Status code</p>
+                    <p className="mt-1 font-mono text-xs">{identity.code}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-4 flex items-center gap-2 rounded-lg border border-dashed px-4 py-6 text-sm text-muted-foreground">
+                  <ShieldOff className="h-4 w-4" />
+                  No identity checked yet. Enter a wallet and verify.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Open a repo</CardTitle>
+              <CardDescription>
+                The cash leg is capped by the borrower&apos;s tier: 50+ = 2%, 20+ = 5%, basic = 10%. Settlement in aUSDC, Travel Rule attributed.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Borrower</Label>
+                  <Select value={borrower} onValueChange={(v) => v && setBorrower(v)}>
+                    <SelectTrigger className="font-mono text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={TIER3}>sandbox fixture 0x1111… (tier 20)</SelectItem>
+                      <SelectItem value={TIER2}>sandbox fixture 0x2222… (tier 20)</SelectItem>
+                      <SelectItem value={ANON}>no A-Pass (must fail)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Lender</Label>
+                  <Select value={lender} onValueChange={(v) => v && setLender(v)}>
+                    <SelectTrigger className="font-mono text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={TIER2}>sandbox fixture 0x2222… (tier 20)</SelectItem>
+                      <SelectItem value={TIER3}>sandbox fixture 0x1111… (tier 20)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Collateral (BOND, units)</Label>
+                  <Input value={collateral} onChange={(e) => setCollateral(e.target.value)} className="font-mono text-xs" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Cash (aUSDC, micro-units)</Label>
+                  <Input value={cash} onChange={(e) => setCash(e.target.value)} className="font-mono text-xs" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Term (days)</Label>
+                  <Input value={termDays} onChange={(e) => setTermDays(e.target.value)} className="font-mono text-xs" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Fee (bps)</Label>
+                  <Input value={feeBps} onChange={(e) => setFeeBps(e.target.value)} className="font-mono text-xs" />
+                </div>
               </div>
+              <Button className="mt-4 w-full" onClick={openRepo} disabled={busy !== null}>
+                {busy === "open" ? "Opening…" : "Open repo"}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <div className="text-neutral-500">Verified</div>
-                <div className="font-medium">{identity.verified ? "yes" : "no"}</div>
+                <CardTitle>Positions</CardTitle>
+                <CardDescription>
+                  Freezing the borrower&apos;s A-Pass mid-term is the credential event; in sandbox it calls the real Cleanverse update_status endpoint and flips the on-chain gate.
+                </CardDescription>
               </div>
-              <div>
-                <div className="text-neutral-500">Lending cap</div>
-                <div className="font-medium">{(identity.haircutBps / 100).toFixed(1)}%</div>
-              </div>
-              <div>
-                <div className="text-neutral-500">CV record</div>
-                <div className="truncate font-mono">{identity.cvRecordId}</div>
-              </div>
+              <Button variant="outline" size="sm" onClick={revokeBorrower} disabled={busy !== null} className="border-destructive/40 text-destructive hover:bg-destructive/5 hover:text-destructive">
+                <ShieldOff className="mr-1.5 h-3.5 w-3.5" />
+                Simulate credential freeze
+              </Button>
             </div>
-          )}
-        </section>
-
-        <section className="rounded-xl border border-[var(--border)] bg-white p-6">
-          <h2 className="text-sm font-semibold">2 · Open a repo</h2>
-          <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-            The cash leg is capped by the borrower&apos;s tier lending cap: tier 3 = 2%, tier 2 = 5%, tier 1 = 10%. Settlement
-            is in aUSDC; every leg is Travel Rule-attributed.
-          </p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <label className="text-xs">
-              <span className="mb-1 block font-medium text-neutral-600">Borrower</span>
-              <select value={borrower} onChange={(e) => setBorrower(e.target.value)} className="w-full rounded-lg border border-[var(--border)] px-3 py-2 font-mono text-xs">
-                <option value={TIER3}>sandbox fixture 0x1111… (tier 20)</option>
-                <option value={TIER2}>sandbox fixture 0x2222… (tier 20)</option>
-                <option value={ANON}>no A-Pass (must fail)</option>
-              </select>
-            </label>
-            <label className="text-xs">
-              <span className="mb-1 block font-medium text-neutral-600">Lender</span>
-              <select value={lender} onChange={(e) => setLender(e.target.value)} className="w-full rounded-lg border border-[var(--border)] px-3 py-2 font-mono text-xs">
-                <option value={TIER2}>sandbox fixture 0x2222… (tier 20)</option>
-                <option value={TIER3}>sandbox fixture 0x1111… (tier 20)</option>
-              </select>
-            </label>
-            <label className="text-xs">
-              <span className="mb-1 block font-medium text-neutral-600">Term (days)</span>
-              <input value={termDays} onChange={(e) => setTermDays(e.target.value)} className="w-full rounded-lg border border-[var(--border)] px-3 py-2 font-mono text-xs" />
-            </label>
-            <label className="text-xs">
-              <span className="mb-1 block font-medium text-neutral-600">Collateral (BOND, units)</span>
-              <input value={collateral} onChange={(e) => setCollateral(e.target.value)} className="w-full rounded-lg border border-[var(--border)] px-3 py-2 font-mono text-xs" />
-            </label>
-            <label className="text-xs">
-              <span className="mb-1 block font-medium text-neutral-600">Cash (aUSDC, micro-units)</span>
-              <input value={cash} onChange={(e) => setCash(e.target.value)} className="w-full rounded-lg border border-[var(--border)] px-3 py-2 font-mono text-xs" />
-            </label>
-            <label className="text-xs">
-              <span className="mb-1 block font-medium text-neutral-600">Fee (bps)</span>
-              <input value={feeBps} onChange={(e) => setFeeBps(e.target.value)} className="w-full rounded-lg border border-[var(--border)] px-3 py-2 font-mono text-xs" />
-            </label>
-          </div>
-          <button
-            onClick={openRepo}
-            disabled={busy !== null}
-            className="mt-4 rounded-lg bg-emerald-700 px-5 py-2 text-sm font-medium text-white disabled:opacity-50"
-          >
-            {busy === "open" ? "Opening…" : "Open repo"}
-          </button>
-        </section>
-
-        <section className="rounded-xl border border-[var(--border)] bg-white p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold">3 · Positions</h2>
-            <button
-              onClick={revokeBorrower}
-              disabled={busy !== null}
-              className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"
-            >
-              Simulate credential freeze (borrower)
-            </button>
-          </div>
-          <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-            Freezing the borrower&apos;s A-Pass mid-term is the credential event — in sandbox mode it calls the real
-            Cleanverse update_status endpoint and flips the on-chain gate, which triggers the rail&apos;s closeout.
-          </p>
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-[var(--border)] text-neutral-500">
-                  <th className="py-2 pr-3 font-medium">Repo</th>
-                  <th className="py-2 pr-3 font-medium">Borrower</th>
-                  <th className="py-2 pr-3 font-medium">Lender</th>
-                  <th className="py-2 pr-3 font-medium">Collateral</th>
-                  <th className="py-2 pr-3 font-medium">Cash</th>
-                  <th className="py-2 pr-3 font-medium">Lending cap</th>
-                  <th className="py-2 pr-3 font-medium">Fee</th>
-                  <th className="py-2 pr-3 font-medium">Status</th>
-                  <th className="py-2 pr-3 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Repo</TableHead>
+                  <TableHead>Borrower</TableHead>
+                  <TableHead>Lender</TableHead>
+                  <TableHead className="text-right">Collateral</TableHead>
+                  <TableHead className="text-right">Cash</TableHead>
+                  <TableHead className="text-right">Cap</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {repos.length === 0 && (
-                  <tr>
-                    <td colSpan={9} className="py-6 text-center text-neutral-400">
-                      No repos yet — open one above.
-                    </td>
-                  </tr>
+                  <TableRow>
+                    <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
+                      No repos yet. Open one above.
+                    </TableCell>
+                  </TableRow>
                 )}
                 {repos.map((r) => (
-                  <tr key={r.id} className="border-b border-[var(--border)] last:border-0">
-                    <td className="py-2 pr-3 font-mono">#{r.id}</td>
-                    <td className="max-w-[9rem] truncate py-2 pr-3 font-mono">{r.borrower.slice(0, 10)}…</td>
-                    <td className="max-w-[9rem] truncate py-2 pr-3 font-mono">{r.lender.slice(0, 10)}…</td>
-                    <td className="py-2 pr-3 font-mono">{fmt(r.collateralAmount)}</td>
-                    <td className="py-2 pr-3 font-mono">{fmt(r.cashAmount)}</td>
-                    <td className="py-2 pr-3">{(r.haircutBps / 100).toFixed(1)}%</td>
-                    <td className="py-2 pr-3 font-mono">{r.feeBps} bps</td>
-                    <td className="py-2 pr-3">
-                      <StatusPill status={r.status} />
-                    </td>
-                    <td className="py-2 pr-3">
-                      {r.status === "OPEN" && (
-                        <button
-                          onClick={() => closeout(r.id)}
+                  <TableRow key={r.id}>
+                    <TableCell className="font-mono text-xs">#{r.id}</TableCell>
+                    <TableCell className="font-mono text-xs" title={r.borrower}>{short(r.borrower)}</TableCell>
+                    <TableCell className="font-mono text-xs" title={r.lender}>{short(r.lender)}</TableCell>
+                    <TableCell className="text-right font-mono text-xs">{fmt(r.collateralAmount)}</TableCell>
+                    <TableCell className="text-right font-mono text-xs">{fmt(r.cashAmount)}</TableCell>
+                    <TableCell className="text-right text-xs">{(r.haircutBps / 100).toFixed(1)}%</TableCell>
+                    <TableCell>
+                      <Badge variant={r.status === "OPEN" ? "default" : "secondary"}>
+                        {r.status === "OPEN" ? "OPEN" : "CLOSED OUT"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        {r.status === "OPEN" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => closeout(r.id)}
+                            disabled={busy !== null}
+                          >
+                            Closeout
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => showAudit(r.id)}
                           disabled={busy !== null}
-                          className="rounded-md border border-[var(--border)] px-2 py-1 font-medium hover:bg-neutral-50 disabled:opacity-50"
                         >
-                          Closeout
-                        </button>
-                      )}
-                      <button
-                        onClick={() => showAudit(r.id)}
-                        disabled={busy !== null}
-                        className="ml-2 rounded-md border border-[var(--border)] px-2 py-1 font-medium hover:bg-neutral-50 disabled:opacity-50"
-                      >
-                        Audit
-                      </button>
-                    </td>
-                  </tr>
+                          <ExternalLink className="mr-1.5 h-3 w-3" />
+                          Audit
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
-          {audit && (
-            <div className="mt-4 rounded-lg bg-neutral-50 p-4 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold">Audit pack — repo #{audit.travelRule ? "" : ""}events</span>
-                <span className="font-mono text-neutral-500">{audit.travelRule.artifact}</span>
-              </div>
-              <ul className="mt-2 space-y-1 font-mono">
-                {audit.events.map((e, i) => (
-                  <li key={i} className="text-neutral-600">
-                    {e.ts} — {e.type}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </section>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
 
-        <footer className="pb-6 text-center text-[11px] text-neutral-400">
-          Pignora — Cleanverse Build: Trusted Assets. Sandbox mode: Cleanverse testnet identities and test funds only; no real assets.
+        <footer className="pb-2 text-center text-[11px] text-muted-foreground">
+          Pignora. Cleanverse Build: Trusted Assets. Sandbox mode: Cleanverse testnet identities and test funds only; no real assets.
         </footer>
       </div>
+
+      <Dialog open={audit !== null} onOpenChange={(open) => !open && setAudit(null)}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Audit pack for repo #{audit?.repoId ?? ""}</DialogTitle>
+            <DialogDescription className="break-all font-mono text-xs">
+              {audit?.artifact.name}
+            </DialogDescription>
+          </DialogHeader>
+          <Separator />
+          <ol className="space-y-2 font-mono text-xs">
+            {audit?.events.map((e, i) => (
+              <li key={i} className="flex gap-3 text-muted-foreground">
+                <span className="shrink-0 text-muted-foreground/60">{e.ts}</span>
+                <span className="text-foreground">{e.type}</span>
+              </li>
+            ))}
+          </ol>
+          {audit?.artifact.note && (
+            <p className="text-xs text-muted-foreground">{audit.artifact.note}</p>
+          )}
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

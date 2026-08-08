@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 
 export const siteConfig = {
-  name: "Pignora — Compliant RWA repo rail on Monad",
+  name: "Pignora | Compliant RWA repo rail on Monad",
   description:
     "Tokenized assets repo'd for aUSDC cash, with haircuts priced by Cleanverse verified identity and automatic compliant closeout on credential events. Built for Cleanverse Build: Trusted Assets.",
-  url: "https://reporeal.dev",
+  url: "https://pignora-desk.vercel.app",
   creator: "@pignora",
   authors: [
     {
       name: "Pignora",
-      url: "https://reporeal.dev",
+      url: "https://pignora-desk.vercel.app",
     },
   ],
   keywords: [
