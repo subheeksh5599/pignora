@@ -362,7 +362,7 @@ export class PignoraWorld {
   private updateWorld(time: number) {
     if (!this.world || !this.camera || !this.core || !this.beadMesh) return;
     const mobile = window.innerWidth <= 680;
-    const anchorX = mobile ? 0 : 1.55;
+    const anchorX = mobile ? 0 : 2.55;
     const anchorY = mobile ? 1.15 : 0.08;
     const p = this.progress;
 
@@ -394,7 +394,10 @@ export class PignoraWorld {
       anchorY + 0.45 - p * 0.52,
       Math.cos(theta) * radius,
     );
-    this.camera.lookAt(anchorX, anchorY, 0);
+    // Look left of the sculpture so the rail sits in the right half of the
+    // frame, leaving the left side for the chapter copy (desktop only;
+    // on mobile the copy sits below the sculpture).
+    this.camera.lookAt(anchorX - (mobile ? 0 : 1.15), anchorY, 0);
   }
 
   private renderOnce() {

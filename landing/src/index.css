@@ -102,7 +102,7 @@ button { font: inherit; }
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(90deg, var(--world) 0%, color-mix(in srgb, var(--world) 94%, transparent) 32%, transparent 57%);
+  background: linear-gradient(90deg, var(--world) 0%, color-mix(in srgb, var(--world) 96%, transparent) 42%, transparent 66%);
   transition: background 0.45s ease;
 }
 #scene { position: absolute; inset: 0; width: 100%; height: 100%; }
@@ -110,9 +110,9 @@ button { font: inherit; }
 /* CSS-only fallback sculpture when WebGL is unavailable */
 .fallback {
   position: absolute;
-  left: 68%;
+  left: 72%;
   top: 50%;
-  width: min(46vw, 620px);
+  width: min(44vw, 600px);
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   border: clamp(12px, 2vw, 26px) dotted var(--ink);
@@ -229,7 +229,7 @@ button { font: inherit; }
   pointer-events: none;
 }
 .copy {
-  width: min(520px, 42vw);
+  width: min(600px, 54vw);
   opacity: 0.08;
   transform: translateY(42px);
   transition: opacity 0.3s ease, transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
@@ -324,8 +324,8 @@ h1, h2 {
   .style-switch { right: 20px; top: 92px; width: 148px; }
   .style-label { display: none; }
   .style-button { grid-template-columns: 20px 1fr auto; font-size: 8px; min-height: 36px; }
-  .copy { width: min(480px, 58vw); }
-  .world::after { background: linear-gradient(90deg, var(--world) 0%, color-mix(in srgb, var(--world) 90%, transparent) 35%, transparent 68%); }
+  .copy { width: min(560px, 64vw); }
+  .world::after { background: linear-gradient(90deg, var(--world) 0%, color-mix(in srgb, var(--world) 92%, transparent) 42%, transparent 72%); }
 }
 
 @media (max-width: 680px) {
