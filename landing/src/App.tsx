@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { PignoraWorld, type PresetName } from "./lib/world";
+import { useEffect, useRef, useState } from "react";
+import { PignoraWorld } from "./lib/world";
 import { api, type Health } from "./lib/api";
 
 const DESK_URL = "https://pignora-desk.vercel.app";
@@ -11,49 +11,37 @@ const CHAPTERS = [
     kicker: "The desk",
     title: "The repo desk that closes out when trust does.",
     body: "Repo moves trillions a day in TradFi. Pignora brings it on-chain for verified institutions: your Cleanverse A-Pass tier prices the lending cap, and a credential event mid-term triggers a defined, on-chain closeout.",
-    coords: [["Instrument", "Repo"], ["Settlement", "aUSDC"]],
   },
   {
     id: "verify",
     kicker: "Verify",
     title: "Identity is the pricing engine.",
     body: "Every counterparty is checked against the Cleanverse A-Pass before a repo can open. Unverified wallets cannot borrow at all. The tier is mirrored on-chain into the IdentityRegistry, where it prices and gates every action.",
-    coords: [["Rail", "CVI"], ["Gate", "On-chain"]],
   },
   {
     id: "price",
     kicker: "Price",
     title: "More verification, thinner haircut.",
     body: "A-Pass tiers run 0 to 99. Tier 50 and above lends at a 2 percent cap, tier 20 at 5 percent, the rest at 10 percent. The same bond, different terms, because of who you are verified to be.",
-    coords: [["Tier 50+", "2%"], ["Tier 20+", "5%"], ["Basic", "10%"]],
   },
   {
     id: "escrow",
     kicker: "Escrow",
     title: "Both legs lock on-chain.",
     body: "The RepoDesk escrows collateral and the aUSDC cash leg until repayment, holding a 105 percent maintenance margin on-chain. Every repo carries a Travel Rule attribution anchor.",
-    coords: [["Margin", "105%"], ["Attribution", "Travel Rule"]],
   },
   {
     id: "closeout",
     kicker: "Closeout",
     title: "A credential event closes the trade.",
     body: "Freeze, revocation, or expiry mid-term flips the on-chain gate. The margin call fires automatically and the position settles in defined numbers: lender covered, borrower excess fail-closed to escrow until identity is restored.",
-    coords: [["Lender", "98.49%"], ["Excess", "Fail-closed"]],
   },
   {
     id: "proof",
     kicker: "Proof",
     title: "Verify it yourself.",
     body: "The desk talks to a live API on Monad testnet. These are real responses from the deployed backend, not screenshots.",
-    coords: [["Chain", "10143"], ["Mode", "Live"]],
   },
-];
-
-const STYLES: { name: PresetName; label: string }[] = [
-  { name: "sage", label: "Sage" },
-  { name: "bone", label: "Bone" },
-  { name: "mist", label: "Mist" },
 ];
 
 function useReducedMotion() {
@@ -73,13 +61,8 @@ export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const worldRef = useRef<PignoraWorld | null>(null);
   const chaptersRef = useRef<HTMLElement[]>([]);
-  const currentRef = useRef<HTMLSpanElement>(null);
-  const coordRef = useRef<HTMLSpanElement>(null);
-  const [preset, setPreset] = useState<PresetName>("sage");
-  const [progressDeg, setProgressDeg] = useState("000.0");
   const [health, setHealth] = useState<Health | null>(null);
   const [healthError, setHealthError] = useState<string | null>(null);
-  const chapterRef = useRef(0);
 
   // boot the world
   useEffect(() => {
@@ -95,11 +78,7 @@ export default function App() {
       const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
       const p = Math.min(1, Math.max(0, window.scrollY / max));
       const index = Math.min(CHAPTERS.length - 1, Math.floor(p * CHAPTERS.length));
-      chapterRef.current = index;
       chaptersRef.current.forEach((el, i) => el.classList.toggle("is-active", i === index));
-      if (currentRef.current) currentRef.current.textContent = String(index + 1).padStart(2, "0");
-      if (coordRef.current) coordRef.current.textContent = (p * 360).toFixed(1).padStart(5, "0") + "°";
-      setProgressDeg((p * 360).toFixed(1).padStart(5, "0"));
     };
     const onResize = () => world.resize();
     const onVis = () => world.setVisible(document.visibilityState === "visible");
@@ -126,16 +105,9 @@ export default function App() {
       .catch((e) => setHealthError((e as Error).message));
   }, []);
 
-  const applyPreset = useCallback((name: PresetName) => {
-    setPreset(name);
-    document.body.dataset.style = name;
-    worldRef.current?.applyPreset(name);
-  }, []);
-
-  // register chapter elements
-  const registerChapter = useCallback((el: HTMLElement | null, index: number) => {
+  const registerChapter = (el: HTMLElement | null, index: number) => {
     if (el) chaptersRef.current[index] = el;
-  }, []);
+  };
 
   const terminalLines: string[] = [];
   terminalLines.push("$ curl -s " + api.base + "/health");
@@ -171,32 +143,12 @@ export default function App() {
       <header className="topbar">
         <a className="brand" href="#desk">Pignora</a>
         <span className="mode">Repo rail · Monad testnet</span>
-        <span className="chapter-count"><b ref={currentRef}>01</b> / {String(CHAPTERS.length).padStart(2, "0")}</span>
+        <a className="desk-link" href={DESK_URL}>Open the desk</a>
       </header>
 
-      {/* art direction switch */}
-      <aside className="style-switch" aria-label="Art direction">
-        <span className="style-label">Art direction</span>
-        {STYLES.map((s, i) => (
-          <button
-            key={s.name}
-            className="style-button"
-            type="button"
-            data-preset={s.name}
-            data-index={String(i + 1).padStart(2, "0")}
-            aria-pressed={preset === s.name}
-            onClick={() => applyPreset(s.name)}
-          >
-            {s.label}
-          </button>
-        ))}
-      </aside>
-
-      {/* progress meter */}
+      {/* progress line */}
       <div className="meter" aria-hidden="true">
-        <span>Scroll the rail</span>
         <span className="meter-line"><i /></span>
-        <span ref={coordRef}>{progressDeg}°</span>
       </div>
 
       {/* chapters */}
@@ -204,14 +156,9 @@ export default function App() {
         {CHAPTERS.map((c, i) => (
           <section key={c.id} id={c.id} className="chapter" ref={(el) => registerChapter(el, i)}>
             <div className="copy">
-              <span className="eyebrow">{String(i + 1).padStart(2, "0")} / {c.kicker}</span>
+              <span className="eyebrow">{c.kicker}</span>
               {i === 0 ? <h1>{c.title}</h1> : <h2>{c.title}</h2>}
               <p>{c.body}</p>
-              <div className="coords">
-                {c.coords.map(([k, v]) => (
-                  <span key={k}>{k} <b>{v}</b></span>
-                ))}
-              </div>
               {i === CHAPTERS.length - 1 && (
                 <>
                   <div className="terminal">
@@ -227,7 +174,7 @@ export default function App() {
 
       <footer className="foot">
         <span>Pignora · Cleanverse Build · Trusted Assets</span>
-        <span>Native scroll · reversible · reduced-motion ready</span>
+        <span>Monad testnet · chain 10143</span>
       </footer>
 
       <noscript><p className="noscript">The complete story remains readable, but the real-time 3D world requires JavaScript.</p></noscript>

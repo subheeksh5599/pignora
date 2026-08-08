@@ -14,9 +14,9 @@ import * as THREE from "three";
  * hijacking, native reversible scrolling.
  */
 
-export type PresetName = "sage" | "bone" | "mist";
+export type PresetName = "sage";
 
-export interface Preset {
+interface Preset {
   background: number;
   core: number;
   bead: number;
@@ -29,7 +29,7 @@ export interface Preset {
   exposure: number;
 }
 
-export const PRESETS: Record<PresetName, Preset> = {
+const PRESETS: Record<PresetName, Preset> = {
   sage: {
     background: 0xedf0ee,
     core: 0x0c2128,
@@ -41,30 +41,6 @@ export const PRESETS: Record<PresetName, Preset> = {
     ambient: 2.4,
     key: 3.4,
     exposure: 1.05,
-  },
-  bone: {
-    background: 0xf4f1ea,
-    core: 0x171715,
-    bead: 0xfbf9f4,
-    beadAlt: 0x6f6c65,
-    ring: 0x171715,
-    accent: 0xb4472c,
-    floor: 0xeae6dc,
-    ambient: 2.2,
-    key: 3.1,
-    exposure: 1.1,
-  },
-  mist: {
-    background: 0xe9eef0,
-    core: 0x17323c,
-    bead: 0xf0f4f5,
-    beadAlt: 0x5b7a85,
-    ring: 0x17323c,
-    accent: 0xb4472c,
-    floor: 0xdde4e6,
-    ambient: 2.5,
-    key: 3.6,
-    exposure: 1.08,
   },
 };
 
@@ -89,7 +65,6 @@ export class PignoraWorld {
   private frame = 0;
   private active = true;
   private progress = 0;
-  private presetName: PresetName = "sage";
   private reduced: boolean;
   private textures: Record<string, THREE.Texture> = {};
   private onFrame?: (t: number) => void;
@@ -165,7 +140,8 @@ export class PignoraWorld {
     this.buildLights();
 
     this.resize();
-    this.applyPreset("sage");
+    this.renderer.setClearColor(PRESETS.sage.background, 1);
+    this.renderer.toneMappingExposure = PRESETS.sage.exposure;
     this.animate(0);
     return true;
   }
@@ -319,37 +295,6 @@ export class PignoraWorld {
     this.fillLight = new THREE.DirectionalLight(0xb4472c, 1.25);
     this.fillLight.position.set(5, 1, -4);
     this.scene.add(this.ambientLight, this.keyLight, this.fillLight);
-  }
-
-  applyPreset(name: PresetName) {
-    this.presetName = PRESETS[name] ? name : "sage";
-    document.body.dataset.style = this.presetName;
-    if (!this.renderer) return;
-    const style = PRESETS[this.presetName];
-    this.renderer.setClearColor(style.background, 1);
-    this.renderer.toneMappingExposure = style.exposure;
-    if (this.beadMaterial) this.beadMaterial.color.setHex(style.bead);
-    if (this.coreMaterial) this.coreMaterial.color.setHex(style.core);
-    if (this.floorMaterial) this.floorMaterial.color.setHex(style.floor);
-    this.ringMaterials.forEach((material, index) => {
-      if (this.coreMaterial && material === this.coreMaterial) return;
-      material.color.setHex(index === 2 || index === this.ringMaterials.length - 1 ? style.accent : style.ring);
-    });
-    if (this.beadMesh) {
-      const color = new THREE.Color();
-      for (let index = 0; index < this.beadMesh.count; index += 1) {
-        color.setHex(index % 17 === 0 ? style.beadAlt : style.bead);
-        this.beadMesh.setColorAt(index, color);
-      }
-      if (this.beadMesh.instanceColor) this.beadMesh.instanceColor.needsUpdate = true;
-    }
-    if (this.ambientLight) this.ambientLight.intensity = style.ambient;
-    if (this.keyLight) this.keyLight.intensity = style.key;
-    if (this.fillLight) {
-      this.fillLight.color.setHex(style.accent);
-      this.fillLight.intensity = 1.25;
-    }
-    this.renderOnce();
   }
 
   updateScroll() {
