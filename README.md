@@ -10,6 +10,7 @@
 </p>
 
 <p align="center">
+  <a href="https://pignora-five.vercel.app">Landing</a> ·
   <a href="https://pignora-desk.vercel.app">Live desk</a> ·
   <a href="docs/ONE-PAGER.md">One-page summary</a> ·
   <a href="docs/demo-script.md">Demo script</a> ·
