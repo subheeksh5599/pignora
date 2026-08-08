@@ -179,8 +179,8 @@ class CleanverseClient {
     return json;
   }
 
-  /** download_travel_rule: regulator report for a withdraw tx hash. */
-  async downloadTravelRule(txHash, chain = config.chain) {
+  /** download_travel_rule: regulator report for a tx hash (withdraw or A-Token transfer). */
+  async downloadTravelRule(txHash, chain = config.chain, address = "") {
     if (this.isMock()) {
       return {
         artifact: `mock-travel-rule-${String(txHash).slice(0, 12)}.pdf`,
@@ -188,8 +188,13 @@ class CleanverseClient {
       };
     }
     try {
-      const r = await this._plain("download_travel_rule", { txHash, chain, reportType: 1 });
-      return { artifact: r?.data?.url ?? r?.data ?? "travel-rule-export", raw: r };
+      const r = await this._plain("download_travel_rule", {
+        txHash,
+        wallet: { chain, address },
+      });
+      const d = r?.data ?? {};
+      const url = d.url ?? d.downloadUrl ?? d.download_url ?? null;
+      return { artifact: url ?? d.fileName ?? d.name ?? "travel-rule-export", raw: r };
     } catch {
       return { artifact: "travel-rule-export", note: "download_travel_rule unavailable for this tx" };
     }

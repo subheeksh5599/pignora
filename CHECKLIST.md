@@ -7,7 +7,7 @@ Every task, small or big, listed. Ticked only when genuinely fixed and tested. U
 - [x] Registered for Cleanverse Build (welcome email received — API docs access code, Sandbox API Id + key)
 - [x] API docs unlocked (docs.cleanverse.com, access code) — full API v5.6 reference read: auth (api-id header), AES-CBC encryption (api-key, zero IV), A-Pass/A-Token/Validator/Fiat-Ramp/Common-Queries modules, response codes
 - [ ] Join developer Telegram (t.me/Cleanverselabs) — user action
-- [ ] Day-1 verification: cvRecordId identical for the same person across chains — PARTIAL: monad cvRecordId 373 confirmed; base query returned a different profile (tier 50); cross-chain equivalence unconfirmed
+- [x] Day-1 verification: cvRecordId IS the cross-chain identity constant — cv 373 on BOTH monad and base (tier differs per chain: 20 vs 50 — tier is chain-scoped, which the rail already prices per chain via config.chain)
 - [x] Confirm aUSDC/addresses from the starter kit match verified facts — aUSDC 0xaC0893... confirmed via chain config + faucet
 
 ## Phase 1 — Research (done, evidence in session)
@@ -45,7 +45,8 @@ Every task, small or big, listed. Ticked only when genuinely fixed and tested. U
 - [x] Real repo settled on-chain with REAL A-Pass-verified parties (tier 50 both, cv 1832/1833): open at 2% lending cap (tx 0xb6fff6a9...), real freeze event (tx 0x7df33be6...), closeout (tx 0x10241e21...), lender 98.49% / borrower excess 15.1e9 escrowed — matches Foundry expectations
 - [x] Lending-cap model aligned to the REAL A-Pass tier scale (0-99: >=50 -> 2%, >=20 -> 5%, >=10 -> 8%) in contract + backend + tests
 - [ ] Real aUSDC cash leg in the testnet E2E — institution faucet pool was dry at demo time; real aUSDC delivery proven (tx 0x096cfcdf...); one-address swap when the pool refills
-- [ ] Real Travel Rule PDF via download_travel_rule (needs a withdraw tx hash)
+- [ ] Real Travel Rule PDF via download_travel_rule — endpoint verified live (TR_001 = needs a withdraw/A-Token-transfer tx; ours are deposits/status changes). Blocked on the aUSDC faucet pool refilling (withdraw needs funded A-Pass wallet)
+- [x] Submission email draft ready — docs/SUBMISSION-EMAIL.md (repo link, video slot, one-pager, deployed chains, CVI+CVA points)
 
 ## Phase 6 — Demo & video
 

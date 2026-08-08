@@ -7,7 +7,7 @@ Click steps + narration. Record only when the Monad testnet deploy is live
 
 - Backend running in sandbox mode (real Cleanverse API + Monad testnet)
 - Borrower wallet (tier-3, bank-verified A-Pass) and lender wallet funded with aUSDC
-- Desk open at /dashboard, mock-mode badge absent (sandbox mode visible)
+- Desk open at https://pignora-desk.vercel.app/dashboard (hosted, sandbox mode visible — no mock badge)
 
 ## Script
 
