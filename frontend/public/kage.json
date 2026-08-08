@@ -1,0 +1,35 @@
+{
+  "network": "testnet",
+  "contractId": "CCQWGM2CBTFTY4B3OTKNTQO3GMBJUHWTJOSU7NC2QRDZ26KCSMJQGJXC",
+  "usdcSac": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+  "sessionAccount": "CB3A5QRRIULWBBADWGYH6QA3XEJHJZJCJ7DV3CE6NBZFQBH5WWLKF636",
+  "explorer": {
+    "contract": "https://stellar.expert/explorer/testnet/contract/CCQWGM2CBTFTY4B3OTKNTQO3GMBJUHWTJOSU7NC2QRDZ26KCSMJQGJXC",
+    "depositTx": "https://stellar.expert/explorer/testnet/tx/308cab4c166a37e83cb03e275b5abbfd850f382644a27fcacbc44ca036674597",
+    "withdrawTx": "https://stellar.expert/explorer/testnet/tx/044a103c5ef5f09fbe6ab39be9b042b62fc113f3d0f3e4c0a01aa77b889c1f7b"
+  },
+  "proven": [
+    { "step": "Deposit", "result": "verified", "detail": "on-chain insert proof verified (BN254) with amount binding, USDC pulled into the pool, commitment + ephemeral key announced", "tx": "308cab4c166a37e83cb03e275b5abbfd850f382644a27fcacbc44ca036674597" },
+    { "step": "Withdraw", "result": "verified", "detail": "membership proof verified, payout paid to a stealth address bound into the proof (keccak(ScAddress) matched cross-language)", "tx": "044a103c5ef5f09fbe6ab39be9b042b62fc113f3d0f3e4c0a01aa77b889c1f7b" },
+    { "step": "Double-spend", "result": "rejected", "detail": "replaying the same nullifier reverts with NullifierUsed (#9)", "tx": null }
+  ],
+  "onchainNote": {
+    "amount": "10000000",
+    "leafIndex": 0,
+    "emptyRoot": "1b7201da72494f1e28717ad1a52eb469f95892f957713533de6175e5da190af2",
+    "newRoot": "02c0566a8b27e960b96c5f662779bd9ba6f001099c2342eb4d85e73e5810ad36",
+    "commitment": "057206e8b530c5dae19f754d6072f1ef375df2501bfd9144e294e7262b8466a7",
+    "ephemeralPub": "0bbeaae7ab6fecce5c68cf63fd4a8a5b91f6d4d21ad27cbdc83a68c2e3446f53",
+    "nullifierHash": "29ac5fdb4f26ad08cba65991236bb87a88813ebba7d6288101e3635906567b77",
+    "recipientField": "0094e68b6ce8e6a531fce62fcafc0d3a7a535d517fb4b534157a00fc4e8a5f90",
+    "stealthAddress": "GABNZK3PEA5BMU6LME6PAJH54WUX6ITT6F35SQSWXEBYJQDWTIN5M72F"
+  },
+  "circuits": {
+    "withdraw": { "constraints": 3005, "public": ["root", "nullifierHash", "recipient", "amount"], "private": ["secret", "nullifier", "pathElements[10]", "pathIndices[10]"] },
+    "insert": { "constraints": 5238, "public": ["oldRoot", "newRoot", "commitment", "leafIndex", "amount"], "private": ["secret", "nullifier", "pathElements[10]"] },
+    "depth": 10,
+    "scheme": "Groth16 over BN254 (alt_bn128)",
+    "hash": "circomlib Poseidon",
+    "ptau": "Hermez Perpetual Powers of Tau (pot14)"
+  }
+}
