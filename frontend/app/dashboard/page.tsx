@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertTriangle, ExternalLink, RefreshCw, ShieldCheck, ShieldOff } from "lucide-react";
+import { AlertTriangle, RefreshCw, ShieldCheck, ShieldOff } from "lucide-react";
 
 const TIER3 = "0x1111111111111111111111111111111111111111";
 const TIER2 = "0x2222222222222222222222222222222222222222";
@@ -154,20 +154,20 @@ export default function DashboardPage() {
   const totalCollateral = repos.reduce((sum, r) => sum + Number(r.collateralAmount) / 1e6, 0);
 
   return (
-    <main className="min-h-screen bg-muted/40 pb-16">
-      <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur">
+    <main className="min-h-screen pb-16">
+      <header className="sticky top-0 z-20 border-b-2 border-ink bg-background/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div>
-            <h1 className="text-lg font-semibold tracking-tight">Pignora</h1>
-            <p className="text-xs text-muted-foreground">
-              Compliant RWA repo rail, lending caps priced by verified identity
+            <h1 className="font-display text-2xl font-bold uppercase tracking-tight">Pignora</h1>
+            <p className="mono-label mt-0.5 text-muted-foreground">
+              Repo rail · lending caps priced by verified identity
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Badge variant={mode === "sandbox" ? "default" : "secondary"} className="gap-1.5">
-              <ShieldCheck className="h-3 w-3" />
-              Cleanverse {mode === "sandbox" ? "sandbox" : "mock"} mode
-            </Badge>
+            <span className="flex items-center gap-2 bg-primary px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-primary-foreground">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              {mode === "sandbox" ? "Sandbox" : "Mock"} mode
+            </span>
             <Button variant="outline" size="sm" onClick={refresh} disabled={busy !== null}>
               <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${busy ? "animate-spin" : ""}`} />
               Refresh
@@ -178,57 +178,43 @@ export default function DashboardPage() {
 
       <div className="mx-auto grid max-w-6xl gap-6 px-6 py-8">
         {error && (
-          <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          <div className="flex items-start gap-2 border-2 border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
             {error}
           </div>
         )}
 
         {/* stats row */}
-        <div className="grid gap-4 sm:grid-cols-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Open repos</CardDescription>
-              <CardTitle className="text-2xl">{openRepos}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Closed out</CardDescription>
-              <CardTitle className="text-2xl">{closedRepos}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Collateral escrowed (BOND)</CardDescription>
-              <CardTitle className="text-2xl">{totalCollateral.toLocaleString()}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>API</CardDescription>
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <span className={`h-2 w-2 rounded-full ${mode === "sandbox" ? "bg-emerald-500" : "bg-amber-500"}`} />
-                {mode || "…"}
-              </CardTitle>
-            </CardHeader>
-          </Card>
+        <div className="grid gap-px border-2 border-ink bg-ink sm:grid-cols-4">
+          {[
+            ["Open repos", String(openRepos)],
+            ["Closed out", String(closedRepos)],
+            ["Collateral (BOND)", totalCollateral.toLocaleString()],
+            ["API", mode || "…"],
+          ].map(([k, v]) => (
+            <div key={k} className="bg-background px-5 py-4">
+              <p className="mono-label text-muted-foreground">{k}</p>
+              <p className="mt-1 font-display text-2xl font-bold uppercase tracking-tight text-primary-foreground">
+                {v}
+              </p>
+            </div>
+          ))}
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <Card>
+          <Card className="border-2 border-ink">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                Counterparty identity <Badge variant="outline">CVI</Badge>
+              <CardTitle className="flex items-center gap-2 font-display text-xl font-bold uppercase tracking-tight">
+                Counterparty identity <Badge variant="outline" className="mono-label">CVI</Badge>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs">
                 A-Pass gate: verified identity, tier, and the lending cap it sets. Unverified wallets are rejected by the rail.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-end gap-3">
                 <div className="flex-1 space-y-1.5">
-                  <Label htmlFor="borrower-wallet" className="text-xs text-muted-foreground">
+                  <Label htmlFor="borrower-wallet" className="mono-label text-muted-foreground">
                     Borrower wallet
                   </Label>
                   <Input
@@ -244,32 +230,22 @@ export default function DashboardPage() {
               </div>
 
               {identity ? (
-                <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg border bg-muted/30 p-4 text-sm sm:grid-cols-5">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Status</p>
-                    <Badge variant={identity.verified ? "default" : "destructive"} className="mt-1">
-                      {identity.verified ? "VERIFIED" : "REJECTED"}
-                    </Badge>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Tier</p>
-                    <p className="mt-1 font-semibold">{identity.tier}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Lending cap</p>
-                    <p className="mt-1 font-semibold">{(identity.haircutBps / 100).toFixed(1)}%</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">CV record</p>
-                    <p className="mt-1 truncate font-mono text-xs">{identity.cvRecordId}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Status code</p>
-                    <p className="mt-1 font-mono text-xs">{identity.code}</p>
-                  </div>
+                <div className="mt-4 grid grid-cols-2 gap-px border border-ink bg-ink sm:grid-cols-5">
+                  {[
+                    ["Status", identity.verified ? "VERIFIED" : "REJECTED", identity.verified ? "text-primary" : "text-destructive"],
+                    ["Tier", String(identity.tier), "text-foreground"],
+                    ["Lending cap", `${(identity.haircutBps / 100).toFixed(1)}%`, "text-foreground"],
+                    ["CV record", identity.cvRecordId, "text-foreground"],
+                    ["Status code", String(identity.code), "text-foreground"],
+                  ].map(([k, v, tone]) => (
+                    <div key={k as string} className="bg-background px-3 py-2">
+                      <p className="mono-label text-muted-foreground">{k}</p>
+                      <p className={`mt-0.5 font-display text-lg font-bold uppercase tracking-tight ${tone}`}>{v}</p>
+                    </div>
+                  ))}
                 </div>
               ) : (
-                <div className="mt-4 flex items-center gap-2 rounded-lg border border-dashed px-4 py-6 text-sm text-muted-foreground">
+                <div className="mt-4 flex items-center gap-2 border-2 border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
                   <ShieldOff className="h-4 w-4" />
                   No identity checked yet. Enter a wallet and verify.
                 </div>
@@ -277,17 +253,19 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-2 border-ink">
             <CardHeader>
-              <CardTitle>Open a repo</CardTitle>
-              <CardDescription>
+              <CardTitle className="font-display text-xl font-bold uppercase tracking-tight">
+                Open a repo
+              </CardTitle>
+              <CardDescription className="text-xs">
                 The cash leg is capped by the borrower&apos;s tier: 50+ = 2%, 20+ = 5%, basic = 10%. Settlement in aUSDC, Travel Rule attributed.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Borrower</Label>
+                  <Label className="mono-label text-muted-foreground">Borrower</Label>
                   <Select value={borrower} onValueChange={(v) => v && setBorrower(v)}>
                     <SelectTrigger className="font-mono text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -298,7 +276,7 @@ export default function DashboardPage() {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Lender</Label>
+                  <Label className="mono-label text-muted-foreground">Lender</Label>
                   <Select value={lender} onValueChange={(v) => v && setLender(v)}>
                     <SelectTrigger className="font-mono text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -308,39 +286,47 @@ export default function DashboardPage() {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Collateral (BOND, units)</Label>
+                  <Label className="mono-label text-muted-foreground">Collateral (BOND, units)</Label>
                   <Input value={collateral} onChange={(e) => setCollateral(e.target.value)} className="font-mono text-xs" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Cash (aUSDC, micro-units)</Label>
+                  <Label className="mono-label text-muted-foreground">Cash (aUSDC, micro-units)</Label>
                   <Input value={cash} onChange={(e) => setCash(e.target.value)} className="font-mono text-xs" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Term (days)</Label>
+                  <Label className="mono-label text-muted-foreground">Term (days)</Label>
                   <Input value={termDays} onChange={(e) => setTermDays(e.target.value)} className="font-mono text-xs" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Fee (bps)</Label>
+                  <Label className="mono-label text-muted-foreground">Fee (bps)</Label>
                   <Input value={feeBps} onChange={(e) => setFeeBps(e.target.value)} className="font-mono text-xs" />
                 </div>
               </div>
-              <Button className="mt-4 w-full" onClick={openRepo} disabled={busy !== null}>
+              <Button className="mt-4 w-full font-display text-sm font-bold uppercase tracking-widest" onClick={openRepo} disabled={busy !== null}>
                 {busy === "open" ? "Opening…" : "Open repo"}
               </Button>
             </CardContent>
           </Card>
         </div>
 
-        <Card>
+        <Card className="border-2 border-ink">
           <CardHeader>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <CardTitle>Positions</CardTitle>
-                <CardDescription>
+                <CardTitle className="font-display text-xl font-bold uppercase tracking-tight">
+                  Positions
+                </CardTitle>
+                <CardDescription className="text-xs">
                   Freezing the borrower&apos;s A-Pass mid-term is the credential event; in sandbox it calls the real Cleanverse update_status endpoint and flips the on-chain gate.
                 </CardDescription>
               </div>
-              <Button variant="outline" size="sm" onClick={revokeBorrower} disabled={busy !== null} className="border-destructive/40 text-destructive hover:bg-destructive/5 hover:text-destructive">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={revokeBorrower}
+                disabled={busy !== null}
+                className="border-2 border-destructive font-display text-xs font-bold uppercase tracking-widest text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              >
                 <ShieldOff className="mr-1.5 h-3.5 w-3.5" />
                 Simulate credential freeze
               </Button>
@@ -349,37 +335,43 @@ export default function DashboardPage() {
           <CardContent>
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Repo</TableHead>
-                  <TableHead>Borrower</TableHead>
-                  <TableHead>Lender</TableHead>
-                  <TableHead className="text-right">Collateral</TableHead>
-                  <TableHead className="text-right">Cash</TableHead>
-                  <TableHead className="text-right">Cap</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                <TableRow className="border-b-2 border-ink">
+                  <TableHead className="mono-label">Repo</TableHead>
+                  <TableHead className="mono-label">Borrower</TableHead>
+                  <TableHead className="mono-label">Lender</TableHead>
+                  <TableHead className="mono-label text-right">Collateral</TableHead>
+                  <TableHead className="mono-label text-right">Cash</TableHead>
+                  <TableHead className="mono-label text-right">Cap</TableHead>
+                  <TableHead className="mono-label">Status</TableHead>
+                  <TableHead className="mono-label text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {repos.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="py-8 text-center font-display text-lg uppercase tracking-widest text-muted-foreground">
                       No repos yet. Open one above.
                     </TableCell>
                   </TableRow>
                 )}
                 {repos.map((r) => (
-                  <TableRow key={r.id}>
+                  <TableRow key={r.id} className="border-b border-border">
                     <TableCell className="font-mono text-xs">#{r.id}</TableCell>
                     <TableCell className="font-mono text-xs" title={r.borrower}>{short(r.borrower)}</TableCell>
                     <TableCell className="font-mono text-xs" title={r.lender}>{short(r.lender)}</TableCell>
                     <TableCell className="text-right font-mono text-xs">{fmt(r.collateralAmount)}</TableCell>
                     <TableCell className="text-right font-mono text-xs">{fmt(r.cashAmount)}</TableCell>
-                    <TableCell className="text-right text-xs">{(r.haircutBps / 100).toFixed(1)}%</TableCell>
+                    <TableCell className="text-right font-mono text-xs">{(r.haircutBps / 100).toFixed(1)}%</TableCell>
                     <TableCell>
-                      <Badge variant={r.status === "OPEN" ? "default" : "secondary"}>
-                        {r.status === "OPEN" ? "OPEN" : "CLOSED OUT"}
-                      </Badge>
+                      {r.status === "OPEN" ? (
+                        <span className="bg-primary px-2 py-0.5 font-display text-[11px] font-bold uppercase tracking-widest text-primary-foreground">
+                          OPEN
+                        </span>
+                      ) : (
+                        <span className="bg-muted px-2 py-0.5 font-display text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                          CLOSED OUT
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
@@ -389,6 +381,7 @@ export default function DashboardPage() {
                             size="sm"
                             onClick={() => closeout(r.id)}
                             disabled={busy !== null}
+                            className="font-display text-[11px] font-bold uppercase tracking-widest"
                           >
                             Closeout
                           </Button>
@@ -398,8 +391,8 @@ export default function DashboardPage() {
                           size="sm"
                           onClick={() => showAudit(r.id)}
                           disabled={busy !== null}
+                          className="font-display text-[11px] font-bold uppercase tracking-widest"
                         >
-                          <ExternalLink className="mr-1.5 h-3 w-3" />
                           Audit
                         </Button>
                       </div>
@@ -411,20 +404,22 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <footer className="pb-2 text-center text-[11px] text-muted-foreground">
+        <footer className="pb-2 text-center mono-label text-muted-foreground">
           Pignora. Cleanverse Build: Trusted Assets. Sandbox mode: Cleanverse testnet identities and test funds only; no real assets.
         </footer>
       </div>
 
       <Dialog open={audit !== null} onOpenChange={(open) => !open && setAudit(null)}>
-        <DialogContent className="max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-h-[80vh] overflow-y-auto border-2 border-ink">
           <DialogHeader>
-            <DialogTitle>Audit pack for repo #{audit?.repoId ?? ""}</DialogTitle>
+            <DialogTitle className="font-display text-xl font-bold uppercase tracking-tight">
+              Audit pack for repo #{audit?.repoId ?? ""}
+            </DialogTitle>
             <DialogDescription className="break-all font-mono text-xs">
               {audit?.artifact.name}
             </DialogDescription>
           </DialogHeader>
-          <Separator />
+          <Separator className="bg-ink" />
           <ol className="space-y-2 font-mono text-xs">
             {audit?.events.map((e, i) => (
               <li key={i} className="flex gap-3 text-muted-foreground">
