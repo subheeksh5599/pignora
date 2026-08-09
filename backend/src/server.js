@@ -8,7 +8,7 @@ import { logAudit, readAudit, buildAuditPack } from "./audit.js";
 import { repoStore } from "./repoStore.js";
 import { isLive, openRepoOnchain, closeoutOnchain, listReposOnchain, repoTxHashes, registryProfile, loadABI } from "./settlement.js";
 import { verifyCredentialEventSignature, credentialEventPayload, operatorAddress } from "./operator.js";
-import { JsonRpcProvider, Wallet, Contract, parseEther } from "ethers";
+import { JsonRpcProvider, Wallet, Contract, parseEther, id as ethersId } from "ethers";
 
 const app = express();
 app.use(express.json());
@@ -187,17 +187,28 @@ app.post("/repos/fund", async (req, res) => {
   try {
     const p = new JsonRpcProvider(config.monadRpc, config.monadChainId, { staticNetwork: true });
     const relay = new Wallet(config.relayKey, p);
+    const registry = new Contract(config.identityRegistry, loadABI("IdentityRegistry"), relay);
     const usd = new Contract(config.mockUsd, loadABI("MockUSD"), relay);
     const bond = new Contract(config.bond, loadABI("MockBond"), relay);
-    // fund gas first (0.5 MON), then cash + collateral
-    if ((await p.getBalance(address)) < parseEther("0.2")) {
-      await relay.sendTransaction({ to: address, value: parseEther("0.5") }).then((t) => t.wait());
+    // 1) register the wallet as a verified counterparty on-chain (relay-gated
+    //    setProfile: Active, standard tier 20) — WITHOUT this, openRepo
+    //    reverts NotVerified(msg.sender) because the desk pulls from an
+    //    unverified lender. Any wallet becomes a verified party; nothing
+    //    hardcoded.
+    const prof = await registry.profiles(address);
+    if (Number(prof.status) !== 1) {
+      const tr = await registry.setProfile(address, 1, 20, 4102444800n, ethersId(`fund-${address.toLowerCase()}`));
+      await tr.wait();
+    }
+    // fund gas first (0.2 MON — enough for approve + open), then cash + collateral
+    if ((await p.getBalance(address)) < parseEther("0.15")) {
+      await relay.sendTransaction({ to: address, value: parseEther("0.2") }).then((t) => t.wait());
     }
     const t1 = await usd.mint(address, 10_000_000_000_000n);
     await t1.wait();
     const t2 = await bond.mint(address, 5_000_000_000_000n);
     await t2.wait();
-    res.json({ ok: true, gas: true, cashMint: t1.hash, bondMint: t2.hash });
+    res.json({ ok: true, gas: true, registered: true, cashMint: t1.hash, bondMint: t2.hash });
   } catch (e) {
     res.status(500).json({ error: `fund failed: ${e.message.slice(0, 120)}` });
   }
