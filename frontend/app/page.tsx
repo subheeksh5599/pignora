@@ -31,10 +31,20 @@ function useHealth() {
 function usePolicy() {
   const [policy, setPolicy] = useState<{ haircuts: Record<string, string>; maintenanceMarginBps: number } | null>(null);
   useEffect(() => {
-    api
-      .policy()
-      .then(setPolicy)
-      .catch(() => {});
+    let live = true;
+    const load = (attempt: number) => {
+      api
+        .policy()
+        .then((p) => live && setPolicy(p))
+        .catch(() => {
+          // cold start can fail the first fetch — retry a few times
+          if (live && attempt < 4) setTimeout(() => load(attempt + 1), 2000 * attempt);
+        });
+    };
+    load(0);
+    return () => {
+      live = false;
+    };
   }, []);
   return policy;
 }
@@ -42,13 +52,23 @@ function usePolicy() {
 function useLatestRepo() {
   const [latest, setLatest] = useState<Repo | null>(null);
   useEffect(() => {
-    api
-      .repos()
-      .then((d) => {
-        const closed = [...d.repos].reverse().find((r) => r.status === "CLOSED_OUT");
-        setLatest(closed ?? null);
-      })
-      .catch(() => {});
+    let live = true;
+    const load = (attempt: number) => {
+      api
+        .repos()
+        .then((d) => {
+          if (!live) return;
+          const closed = [...d.repos].reverse().find((r) => r.status === "CLOSED_OUT");
+          setLatest(closed ?? null);
+        })
+        .catch(() => {
+          if (live && attempt < 4) setTimeout(() => load(attempt + 1), 2000 * attempt);
+        });
+    };
+    load(0);
+    return () => {
+      live = false;
+    };
   }, []);
   return latest;
 }
@@ -170,7 +190,7 @@ export default function App() {
           <div className="mx-auto grid max-w-6xl grid-cols-2 divide-x-2 divide-bone/15 md:grid-cols-4">
             {[
               ["Identity rail", "CVI"],
-              ["Cash leg", "aUSDC"],
+              ["Cash leg", "USD CVA"],
               ["Margin", marginPct ? `${marginPct}%` : "105%"],
               ["Deep cap", deepCap ? deepCap : "tier-priced"],
             ].map(([k, v]) => (
