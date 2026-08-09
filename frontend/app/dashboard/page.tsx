@@ -13,8 +13,11 @@ import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertTriangle, RefreshCw, ShieldCheck, ShieldOff } from "lucide-react";
 
-const BORROWER = "0x197F2ed9C82c8a50Ad9bddd849d16Ce9afb17eE5"; // deployer (relay key), tier 50, cv 1832
-const LENDER = "0x12D1275bE7C5961F12Bac967E0004Ba9B960930C"; // lender EOA, tier 50, cv 1833
+// Default demo parties come from env so the repo is clone-and-run with no
+// hardcoded addresses; fall back to the seeded local-chain accounts.
+// (anvil #0 = tier 50 borrower, anvil #1 = tier 20 lender)
+const BORROWER = process.env.NEXT_PUBLIC_DEFAULT_BORROWER || "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+const LENDER = process.env.NEXT_PUBLIC_DEFAULT_LENDER || "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
 const ANON = "0x9999999999999999999999999999999999999999";
 
 function fmt(amount: string): string {
@@ -287,8 +290,8 @@ export default function DashboardPage() {
                   <Select value={borrower} onValueChange={(v) => v && setBorrower(v)}>
                     <SelectTrigger className="font-mono text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={BORROWER}>0x197F…7eE5</SelectItem>
-                      <SelectItem value={LENDER}>0x12D1…930C</SelectItem>
+                      <SelectItem value={BORROWER}>0xf39F…2266</SelectItem>
+                      <SelectItem value={LENDER}>0x7099…79C8</SelectItem>
                       <SelectItem value={ANON}>0x9999…</SelectItem>
                     </SelectContent>
                   </Select>
@@ -298,8 +301,8 @@ export default function DashboardPage() {
                   <Select value={lender} onValueChange={(v) => v && setLender(v)}>
                     <SelectTrigger className="font-mono text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={LENDER}>0x12D1…930C</SelectItem>
-                      <SelectItem value={BORROWER}>0x197F…7eE5</SelectItem>
+                      <SelectItem value={LENDER}>0x7099…79C8</SelectItem>
+                      <SelectItem value={BORROWER}>0xf39F…2266</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
