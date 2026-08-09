@@ -176,11 +176,13 @@ app.get("/policy", (_req, res) => {
 
 // ----------------------------------------------------------------- repos
 
-/** Fund the connected wallet with demo cash (CVA stand-in) + BOND collateral
- *  so the desk's wallet-signed flow works with ANY wallet. Testnet mocks
- *  only — never enabled against real assets. */
+/** Fund the counterparties with demo cash (CVA stand-in) + BOND collateral
+ *  so the desk's wallet-signed flow works with ANY wallet. The open pulls
+ *  BOND from the BORROWER and cash from the LENDER, so both must be
+ *  provisioned + approved. Testnet mocks only — never enabled against
+ *  real assets. */
 app.post("/repos/fund", async (req, res) => {
-  const { address } = req.body;
+  const { address, borrower } = req.body;
   if (!/^0x[0-9a-fA-F]{40}$/.test(address || "")) {
     return res.status(400).json({ error: "address required" });
   }
@@ -190,25 +192,44 @@ app.post("/repos/fund", async (req, res) => {
     const registry = new Contract(config.identityRegistry, loadABI("IdentityRegistry"), relay);
     const usd = new Contract(config.mockUsd, loadABI("MockUSD"), relay);
     const bond = new Contract(config.bond, loadABI("MockBond"), relay);
-    // 1) register the wallet as a verified counterparty on-chain (relay-gated
+    // 1) register the lender as a verified counterparty on-chain (relay-gated
     //    setProfile: Active, standard tier 20) — WITHOUT this, openRepo
-    //    reverts NotVerified(msg.sender) because the desk pulls from an
-    //    unverified lender. Any wallet becomes a verified party; nothing
-    //    hardcoded.
+    //    reverts NotVerified(msg.sender). Any wallet becomes a verified
+    //    party; nothing hardcoded.
     const prof = await registry.profiles(address);
     if (Number(prof.status) !== 1) {
       const tr = await registry.setProfile(address, 1, 20, 4102444800n, ethersId(`fund-${address.toLowerCase()}`));
       await tr.wait();
     }
-    // fund gas first (0.2 MON — enough for approve + open), then cash + collateral
-    if ((await p.getBalance(address)) < parseEther("0.15")) {
-      await relay.sendTransaction({ to: address, value: parseEther("0.2") }).then((t) => t.wait());
+    // 2) provision BOTH parties — the open pulls BOND from the borrower and
+    //    cash from the lender; missing balances or approvals revert
+    //    TransferFailed. Both get tokens + max approval for the desk.
+    const targets = [...new Set([address, borrower].filter((a) => a && /^0x[0-9a-fA-F]{40}$/.test(a)))];
+    for (const t of targets) {
+      if ((await p.getBalance(t)) < parseEther("0.15")) {
+        await relay.sendTransaction({ to: t, value: parseEther("0.2") }).then((x) => x.wait());
+      }
+      if ((await usd.balanceOf(t)) < 950_000_000_000n) {
+        await (await usd.mint(t, 10_000_000_000_000n)).wait();
+      }
+      if ((await bond.balanceOf(t)) < 1_000_000_000_000n) {
+        await (await bond.mint(t, 5_000_000_000_000n)).wait();
+      }
+      if ((await usd.allowance(t, config.repoDesk)) < 950_000_000_000n) {
+        // only the relay (0x197F, the default borrower) can be approved here —
+        // the relay key IS that wallet. Any other borrower must approve its
+        // own BOND from its own wallet.
+        if (t.toLowerCase() === relay.address.toLowerCase()) {
+          await (await usd.approve(config.repoDesk, 2n ** 255n)).wait();
+        }
+      }
+      if ((await bond.allowance(t, config.repoDesk)) < 1_000_000_000_000n) {
+        if (t.toLowerCase() === relay.address.toLowerCase()) {
+          await (await bond.approve(config.repoDesk, 2n ** 255n)).wait();
+        }
+      }
     }
-    const t1 = await usd.mint(address, 10_000_000_000_000n);
-    await t1.wait();
-    const t2 = await bond.mint(address, 5_000_000_000_000n);
-    await t2.wait();
-    res.json({ ok: true, gas: true, registered: true, cashMint: t1.hash, bondMint: t2.hash });
+    res.json({ ok: true, funded: targets });
   } catch (e) {
     res.status(500).json({ error: `fund failed: ${e.message.slice(0, 120)}` });
   }

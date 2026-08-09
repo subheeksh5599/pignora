@@ -161,10 +161,11 @@ export default function DashboardPage() {
     try {
       const addr = await connectWallet();
       setOperator(addr);
-      // fund the connected wallet (testnet demo: gas + cash + collateral) so
-      // the wallet-signed open/closeout work with ANY wallet
+      // fund the connected wallet + the borrower on the form (testnet demo:
+      // gas + cash + collateral for both, so the wallet-signed open works
+      // with ANY wallet — the open pulls BOND from the borrower)
       try {
-        await api.fund(addr);
+        await api.fund(addr, borrower || undefined);
       } catch (e) {
         setWalletError(`wallet connected, but funding failed: ${(e as Error).message.slice(0, 80)}`);
       }
