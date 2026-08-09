@@ -158,7 +158,12 @@ export default function DashboardPage() {
       <header className="sticky top-0 z-20 border-b-2 border-ink bg-background/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div>
-            <h1 className="font-display text-2xl font-bold uppercase tracking-tight">Pignora</h1>
+            <a
+              href={process.env.NEXT_PUBLIC_LANDING_URL ?? "https://pignora-five.vercel.app"}
+              className="inline-block font-display text-2xl font-bold uppercase tracking-tight underline-offset-4 hover:underline focus-ring"
+            >
+              Pignora
+            </a>
             <p className="mono-label mt-0.5 text-muted-foreground">
               Repo rail · lending caps priced by verified identity
             </p>
@@ -415,8 +420,15 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <footer className="pb-2 text-center mono-label text-muted-foreground">
-          Pignora. Cleanverse Build: Trusted Assets. Sandbox mode: Cleanverse testnet identities and test funds only; no real assets.
+        <footer className="flex items-center justify-center gap-4 pb-2 text-center mono-label text-muted-foreground">
+          <a
+            href={process.env.NEXT_PUBLIC_LANDING_URL ?? "https://pignora-five.vercel.app"}
+            className="underline decoration-2 underline-offset-4 hover:text-foreground focus-ring"
+          >
+            Landing
+          </a>
+          <span aria-hidden="true">·</span>
+          <span>Pignora. Cleanverse Build: Trusted Assets. Sandbox mode: Cleanverse testnet identities and test funds only; no real assets.</span>
         </footer>
       </div>
 
