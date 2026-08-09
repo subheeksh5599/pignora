@@ -6,7 +6,7 @@ Every task, small or big, listed. Ticked only when genuinely fixed and tested. U
 
 - [x] Registered for Cleanverse Build (welcome email received — API docs access code, Sandbox API Id + key)
 - [x] API docs unlocked (docs.cleanverse.com, access code) — full API v5.6 reference read: auth (api-id header), AES-CBC encryption (api-key, zero IV), A-Pass/A-Token/Validator/Fiat-Ramp/Common-Queries modules, response codes
-- [ ] Join developer Telegram (t.me/Cleanverselabs) — user action
+- [x] Join developer Telegram (t.me/Cleanverselabs) — done
 - [x] Day-1 verification: cvRecordId IS the cross-chain identity constant — cv 373 on BOTH monad and base (tier differs per chain: 20 vs 50 — tier is chain-scoped, which the rail already prices per chain via config.chain)
 - [x] Confirm aUSDC/addresses from the starter kit match verified facts — aUSDC 0xaC0893... confirmed via chain config + faucet
 
@@ -44,7 +44,7 @@ Every task, small or big, listed. Ticked only when genuinely fixed and tested. U
 - [x] RepoDesk + IdentityRegistry deployed to Monad testnet (IdentityRegistry 0xdcb88994..., RepoDesk 0x398D45F5..., deployer funded via faucet)
 - [x] Real repo settled on-chain with REAL A-Pass-verified parties (tier 50 both, cv 1832/1833): open at 2% lending cap (tx 0xb6fff6a9...), real freeze event (tx 0x7df33be6...), closeout (tx 0x10241e21...), lender 98.49% / borrower excess 15.1e9 escrowed — matches Foundry expectations
 - [x] Lending-cap model aligned to the REAL A-Pass tier scale (0-99: >=50 -> 2%, >=20 -> 5%, >=10 -> 8%) in contract + backend + tests
-- [ ] Real aUSDC cash leg in the testnet E2E — API faucet still down (TransferNotAllowed, team-acknowledged). Workaround per the dev group: query_deposit_address (added to the client) -> fund via faucet.circle.com (Monad Testnet) -> wallet receives AUSDC. Deposit wallet returned: 0x15fd89cf0356B547650e7F8Bab8e6DA2880f99bA; the faucet click itself is gated by reCAPTCHA (manual step) and the pool refill fixes the API route
+- [ ] Real aUSDC cash leg in the testnet E2E — UNBLOCKED INFO: the Monad aUSDC pair was MIGRATED (confirmed in the dev group + on-chain): old 0xaC0893567D43C3E7e6e35a72803df05416C1f20D is stale, canonical is 0xfa96de5b8f434c26fdff953303dd66ff80af1026 ("Cleanverse USD"). Backend .env + .env.example + testnet-repo.js updated and redeployed. Prior Circle deposit was refunded as non_whitelist_refund (pre-migration state); re-deposit to the new pair's deposit address when the team confirms the migration is fully live
 - [ ] Real Travel Rule PDF via download_travel_rule — endpoint verified live (TR_001 = needs a withdraw/A-Token-transfer tx; ours are deposits/status changes). Blocked on the aUSDC faucet pool refilling (withdraw needs funded A-Pass wallet)
 - [x] Submission email draft ready — docs/SUBMISSION-EMAIL.md (repo link, video slot, one-pager, deployed chains, CVI+CVA points)
 
