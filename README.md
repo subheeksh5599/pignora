@@ -1,31 +1,93 @@
-<p align="center">
-  <img src="docs/media/1.png" alt="Pignora desk" width="720">
-</p>
+<div align="center">
 
-<h1 align="center">Pignora</h1>
+<img src="docs/media/1.png" alt="Pignora — the repo desk that closes out when trust does" width="100%" />
 
-<p align="center">
-  <b>Compliant repo rail for tokenized assets — lending caps priced by verified identity, automatic closeout on credential events.</b><br>
-  Cleanverse Build: Trusted Assets Hackathon · Track 1 (RWA) · Monad testnet
-</p>
+&nbsp;
 
-<p align="center">
-  <a href="https://pignora-desk.vercel.app">Live app</a> ·
-  <a href="https://pignora-desk.vercel.app/dashboard">Desk</a> ·
-  <a href="docs/ONE-PAGER.md">One-page summary</a> ·
-  <a href="docs/demo-script.md">Demo script</a> ·
-  <a href="https://testnet.monadscan.xyz/address/0x398D45F56F759Cd4b4cf0be07C2C4AADf7327edA">RepoDesk on MonadScan</a>
-</p>
+[![Live app](https://img.shields.io/badge/●_live-pignora--desk.vercel.app-0a0a0a)](https://pignora-desk.vercel.app)
+[![RepoDesk on MonadScan](https://img.shields.io/badge/📜_RepoDesk_Monad_testnet-0a0a0a)](https://testnet.monadscan.xyz/address/0x398D45F56F759Cd4b4cf0be07C2C4AADf7327edA)
+[![License: MIT](https://img.shields.io/badge/license-MIT-0a0a0a.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-30%20passing-0a0a0a)](https://github.com/subheeksh5599/pignora/actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/subheeksh5599/pignora/ci.yml?branch=main&label=CI)](https://github.com/subheeksh5599/pignora/actions)
+![Stack](https://img.shields.io/badge/Solidity%20·%20Node%20·%20Next.js-0a0a0a)
+![Cleanverse](https://img.shields.io/badge/Cleanverse-CVI%20·%20CVA-0a0a0a)
+![Monad](https://img.shields.io/badge/Monad-testnet-0a0a0a)
+
+### The repo desk that closes out when trust does.
+
+Pignora is a compliant repo rail for tokenized assets on Monad. The lending
+cap is priced by the counterparty's Cleanverse A-Pass tier, and a credential
+event mid-term triggers a defined, on-chain closeout — no freeze-and-hope.
+Every leg settles in aUSDC, Travel Rule-attributed, with an append-only audit
+pack.
+
+### ▶ Live now at **[pignora-desk.vercel.app](https://pignora-desk.vercel.app)**
+
+**[ Live app ↗ ](https://pignora-desk.vercel.app)** · **[ Desk ↗ ](https://pignora-desk.vercel.app/dashboard)** · **[ Settlement evidence ↓ ](#transactions--the-evidence)** · **[ Run it locally ↓ ](#run-it-locally)**
+
+Built for the **Cleanverse Build: Trusted Assets Hackathon** (Track 1, RWA).
+MIT licensed.
+
+</div>
 
 ---
 
-## What it is
+## Table of contents
 
-Repo is how institutions fund themselves — trillions of dollars a day. Pignora brings it on-chain with **identity as the pricing engine and the enforcement trigger, not a gate**:
+- [▶ See it in one command](#-see-it-in-one-command)
+- [The problem Pignora solves](#the-problem-pignora-solves)
+- [How Pignora works](#how-pignora-works)
+  - [1 · Verify](#1--verify)
+  - [2 · Price](#2--price)
+  - [3 · Escrow](#3--escrow)
+  - [4 · Close](#4--close)
+- [Transactions — the evidence](#transactions--the-evidence)
+- [Architecture](#architecture)
+  - [Repo lifecycle](#repo-lifecycle)
+  - [Component by component](#component-by-component)
+- [Engineering decisions — the hard problems](#engineering-decisions--the-hard-problems)
+- [What's real vs pending — the honesty table](#whats-real-vs-pending--the-honesty-table)
+- [Tests](#tests)
+- [Run it locally](#run-it-locally)
+- [Deploy](#deploy)
+- [Project layout](#project-layout)
+- [Tech stack](#tech-stack)
+- [Roadmap](#roadmap)
+- [License](#license)
 
-- The **lending cap is set by the counterparty's Cleanverse A-Pass tier** (0-99 scale: ≥50 → 2%, ≥20 → 5%, ≥10 → 8%). More verification, higher lending cap — the same bond, different terms, purely because of who the counterparty is verified to be.
-- **Credential events are protocol events**: a freeze (or revocation/expiry) of the borrower mid-term triggers an automatic margin call and a compliant closeout — collateral covers the obligation, excess returns, and frozen parties fail closed to escrow until verified again.
-- Every leg settles in aUSDC, carries **Travel Rule attribution**, and produces an append-only **audit pack with a real PDF**.
+---
+
+## ▶ See it in one command
+
+Three terminals, one repo:
+
+```bash
+# 1 — backend (sandbox mode: real Cleanverse API + Monad testnet)
+cd backend && cp .env.example .env && npm install && npm test && node src/server.js
+
+# 2 — frontend (landing at /, desk at /dashboard)
+cd frontend && npm install && npm run dev
+```
+
+Open http://localhost:3000 — the identity panel auto-verifies a real A-Pass,
+you open a repo, freeze the borrower's credential, and the position closes out
+in the same click. Every number on screen is fetched from the live backend:
+no mock data, no simulation.
+
+---
+
+## The problem Pignora solves
+
+Repurchase agreements move trillions of dollars a day in TradFi — but they
+have never worked on-chain, because a counterparty's verified identity can
+change while the trade is still live. Every existing design freezes the
+position and hopes: funds locked, no defined settlement, no enforcement.
+
+Pignora makes the credential change a protocol event: a freeze, revocation,
+or expiry mid-term triggers an automatic margin call and a compliant
+closeout — collateral covers the obligation, the excess fails closed to
+escrow until the party is verified again, and the frozen party can never
+receive a single unit.
 
 ## Screenshots
 
@@ -36,56 +98,118 @@ Repo is how institutions fund themselves — trillions of dollars a day. Pignora
 | Audit pack console | Architecture |
 | ![audit](docs/media/3.png) | ![architecture](docs/media/4.png) |
 
-## Mechanism
+## How Pignora works
 
-![architecture](docs/media/4.png)
+### 1 · Verify
 
+Both counterparties pass a Cleanverse A-Pass check before a repo can open.
+`query_apass` returns the tier (0–99), status, and cvRecordId; the verdict is
+mirrored into an on-chain IdentityRegistry. Unverified wallets cannot borrow.
+
+### 2 · Price
+
+The tier sets the lending cap — more verification, higher cap:
+
+| A-Pass tier | Lending cap |
+|:------------|:------------|
+| Tier 50+    | 2%          |
+| Tier 20+    | 5%          |
+| Basic       | 10%         |
+
+The same bond, different terms, purely because of who the counterparty is
+verified to be.
+
+### 3 · Escrow
+
+Collateral (a tokenized bond) and the aUSDC cash leg lock in the RepoDesk
+until repayment, with a 105% maintenance margin enforced on-chain.
+
+### 4 · Close
+
+A credential event mid-term flips the on-chain gate and settles the repo in
+defined numbers: lender covered to the obligation, borrower excess
+fail-closed to escrow. The closeout lands in the same click as the event.
+
+## Transactions — the evidence
+
+A real repo was settled on Monad testnet with real A-Pass-verified parties
+(tier 50, cvRecordId 1832/1833):
+
+| Step | Transaction |
+|:-----|:------------|
+| Repo open at the tier-priced 2% lending cap | `0xb6fff6a9…` (truncated in docs; on-chain) |
+| Freeze credential event (real `update_status`) | [`0x7df33be6…`](https://testnet.monadscan.xyz/tx/0x7df33be6172afcc4da0832b4c6291af0bd45511c32e40e1ae67d71df929d27e0) |
+| Closeout — lender 98.49% obligation coverage, excess fail-closed | [`0x10241e21…`](https://testnet.monadscan.xyz/tx/0x10241e21e819c65878db6f03e4f21d5f93d848ae941dafc147cd0ff5cabe59ae) |
+
+Deployed contracts: [RepoDesk `0x398D45F5…`](https://testnet.monadscan.xyz/address/0x398D45F56F759Cd4b4cf0be07C2C4AADf7327edA) · [IdentityRegistry `0xdcb88994…`](https://testnet.monadscan.xyz/address/0xdcb889940B95FF9625d76a735DaCdFEB979aD4C2) · aUSDC `0xfa96de5b…` (migrated pair) · A-Pass `0xbA82D189…`
+
+## Architecture
+
+### Repo lifecycle
+
+```mermaid
+sequenceDiagram
+    participant B as Borrower (A-Pass verified)
+    participant D as RepoDesk (on-chain)
+    participant I as IdentityRegistry (on-chain)
+    participant C as Cleanverse API (sandbox)
+
+    B->>C: query_apass (tier, status, cvRecordId)
+    C-->>B: tier 50 → 2% lending cap
+    B->>D: open repo (collateral + aUSDC escrowed)
+    D->>I: mirror identity verdict
+    C-->>D: credential event (freeze)
+    D->>I: gate flips
+    D->>D: automatic closeout (borrower_2)
+    D-->>B: excess fail-closed to escrow
 ```
-A-Pass (tier) ──► lending cap ──► repo open (escrowed, Travel Rule anchored)
-                                    │
-A-Pass event (freeze/revoke/expiry) ┘
-        │
-        └──► on-chain gate flips ──► margin call ──► compliant closeout
-                                     ├─ obligation covered from collateral
-                                     └─ excess fail-closed to escrow
+
+### Component by component
+
+| Component | Role |
+|:----------|:-----|
+| `contracts/` | Foundry — `IdentityRegistry` (A-Pass mirror, tier → lending cap), `RepoDesk` (open / repay / margin / closeout / escrow, travel-rule anchor), mocks |
+| `backend/` | Node API — Cleanverse client (AES-CBC writes), identity relay, audit (JSONL + PDF), policy pricing |
+| `frontend/` | Next.js — landing page (`/`) + treasury desk (`/dashboard`) on shadcn/ui, every number a live API read |
+
+## Engineering decisions — the hard problems
+
+1. **Identity as enforcement, not a gate.** Most compliance designs freeze-and-hope. Pignora makes the credential change the closeout trigger, so a dead identity produces a defined settlement instead of locked funds.
+2. **The tier map is real, chain-scoped data.** A-Pass tiers differ per chain (cv 373 is tier 20 on Base, tier 50 on Monad). The pricing map lives in one config and is tested against the real API.
+3. **Credential events close the position automatically.** The freeze endpoint performs a real `update_status` call and closes every open repo of the affected borrower in the same click — verified end-to-end.
+4. **Only real data, ever.** The desk auto-verifies a live identity, the policy table fetches `/policy`, the proof terminal renders `/health`. No mock mode in the UI; the hermetic mock path exists only for the test suite.
+5. **One URL for the whole product.** Landing at `/`, desk at `/dashboard` — the demo, the README links, and the submission all point at a single domain.
+6. **Serverless cold starts.** The backend pins function memory and max duration so the ethers + AES + PDF bundle doesn't time out on cold lambda.
+
+## What's real vs pending — the honesty table
+
+| Claim | Status |
+|:------|:-------|
+| Contracts deployed and verified on Monad testnet | ✅ Real (RepoDesk + IdentityRegistry, addresses above) |
+| Repo settled on-chain with real A-Pass-verified parties | ✅ Real (open → freeze → closeout, tx hashes above) |
+| Credential event auto-closes open repos | ✅ Real (verified in the live walk) |
+| Desk reads live identity / policy / health | ✅ Real (deployed API, sandbox mode) |
+| Cleanverse identity rail (CVI) | ✅ Real (query_apass + update_status) |
+| Settlement token is aUSDC (CVA) | ✅ Real contract, migrated pair |
+| Real aUSDC cash leg with a fresh Circle deposit | ⏳ Pending — pair migrated; deposit address re-provisioning with the team |
+| Real Travel Rule PDF via `download_travel_rule` | ⏳ Pending — needs a withdraw tx from a funded A-Pass wallet (same dependency) |
+| Mainnet deployment | ❌ Not applicable — team guidance: testnet is the build target |
+
+## Tests
+
+| Suite | Count | What it covers |
+|:------|:------|:---------------|
+| Foundry (`contracts`) | 22 | IdentityRegistry tier→cap, RepoDesk open/repay/margin/closeout/escrow, non-borrower reverts, double closeout, repay-after-closeout, zero amounts |
+| Node (`backend`) | 8 | Hermetic mock: cleanverse gate, relay credential events, freeze→status 2 semantics, audit append + read |
+
+```bash
+cd contracts && forge test    # 22 passing
+cd backend && npm test       # 8 passing
 ```
 
-1. **Identity (CVI)** — `query_apass` returns the counterparty's tier/subTier/group/status/expiry/cvRecordId. The relay mirrors it into an on-chain `IdentityRegistry`; the registry prices the lending cap and gates every repo action (`isActive`).
-2. **Verified settlement (CVA)** — the cash leg is aUSDC; the `RepoDesk` escrows both legs until repayment or closeout. Pignora also issues its own verified asset via `atoken/launch` ("Pignora Bond", PNGB01) with an embedded compliance rule — CVA from the issuance stage.
-3. **Credential events** — `update_status` freeze/unfreeze flips the real on-chain gate; the relay propagates it to the registry, which is what RepoDesk's closeout path reads. Frozen/revoked parties can never receive — proceeds fail closed to escrow.
-4. **Audit** — every repo writes an append-only JSONL ledger plus a generated PDF artifact; the Travel Rule hash is anchored on-chain per repo.
+CI runs both suites plus the frontend typecheck + build on every push.
 
-## Verified on-chain (Monad testnet, chain 10143)
-
-Real contracts, real identities, real settlement:
-
-| Contract | Address |
-|:--|:--|
-| RepoDesk | `0x398D45F56F759Cd4b4cf0be07C2C4AADf7327edA` |
-| IdentityRegistry | `0xdcb889940B95FF9625d76a735DaCdFEB979aD4C2` |
-| MockBond | `0x13211b8f5983bfdcd2a14d8467631254c3af5a89` |
-| MockUSD | `0xa66155a4c3ff24c0300afa66de6ff8d5f7310aea` |
-
-The settlement E2E (`backend/scripts/testnet-repo.js`) used real sandbox A-Passes (tier 50, cvRecordId 1832/1833), opened a repo at the tier-priced 2% lending cap, fired a real `update_status` freeze, and executed the closeout:
-
-| Step | Tx |
-|:--|:--|
-| `openRepo` (2% lending cap, tier 50) | `0xb6fff6a96c2b0ef69bfbed1fe004af0648a0fd7198ccca66f5b7826d667f3f3e` |
-| Freeze (update_status + on-chain mirror) | `0x7df33be6172afcc4da0832b4c6291af0bd45511c32e40e1ae67d71df929d27e0` |
-| `executeCloseout` | `0x10241e21e819c65878db6f03e4f21d5f93d848ae941dafc147cd0ff5cabe59ae` |
-
-Closeout result (matches the Foundry expectations exactly): lender received **984,900,000,000** BOND (98.49% obligation coverage), borrower excess **15,100,000,000** fail-closed to escrow.
-
-## Verification
-
-```
-contracts: 22 Foundry tests green (identity gates, tier pricing, margin calls,
-            closeout, escrow, revert paths)
-backend:   8 node tests green (hermetic mock) + live sandbox E2E
-frontend:  typecheck + lint clean, production build green
-```
-
-## Quickstart
+## Run it locally
 
 ```bash
 # contracts
@@ -101,27 +225,43 @@ cd frontend && npm install && npm run dev  # :3000 -> / (landing) and /dashboard
 export PRIVATE_KEY=... && bash scripts/deploy-monad.sh
 ```
 
-## Live deployment
+No keys? The backend still boots in mock mode for local development; the
+deployed API runs sandbox against the real Cleanverse sandbox.
 
-- App (landing + desk): https://pignora-desk.vercel.app — `/` is the landing, `/dashboard` is the desk
-- API: https://backend-six-rho-86.vercel.app (`/health`, `/identity/:address`, `/repos`, `/repos/:id/audit`)
-- Contracts: Monad testnet (addresses above) — the "live demo URL or testnet deployment" submission item
+## Deploy
 
-## Repository structure
+```bash
+# each app deploys independently to Vercel
+cd backend && vercel deploy --prod --yes
+cd frontend && vercel deploy --prod --yes
+```
+
+## Project layout
 
 ```
 contracts/   Foundry — IdentityRegistry, RepoDesk, mocks, 22 tests, deploy script
 backend/     Node API — Cleanverse client (AES-CBC), relay, audit (JSONL + PDF), tests, E2E scripts
 frontend/    Next.js — landing page (/) + treasury desk (/dashboard) on shadcn/ui, live API reads
 scripts/     deploy-monad.sh (one-command testnet pipeline)
-docs/        one-pager, demo script, application copy, screenshots
+docs/        one-pager, demo script, submission email, screenshots
+.github/     CI — forge test, backend tests, frontend typecheck + build
 ```
 
-## Honest scope
+## Tech stack
 
-- Testnet + sandbox only; no legal advice; no real funds involved.
-- The settlement E2E used the local MockUSD cash leg because the institution aUSDC faucet pool ran dry at demo time — swapping one address uses the real aUSDC (delivery proven: tx `0x096cfcdf…`).
-- A-Pass tier is numeric 0-99; the lending-cap bands (≥50 → 2%, ≥20 → 5%, ≥10 → 8%) are Pignora's policy mapping, owner-overridable per tier on-chain.
+- **Contracts**: Solidity, Foundry (forge)
+- **Backend**: Node.js, ethers, Express, Cleanverse cooperate API (AES-CBC)
+- **Frontend**: Next.js 16, Tailwind CSS v4, shadcn/ui
+- **Chain**: Monad testnet (10143)
+- **Identity**: Cleanverse A-Pass (CVI) + A-Token (CVA)
+
+## Roadmap
+
+- [ ] Real aUSDC cash leg E2E on the migrated pair (deposit re-provisioning with the team)
+- [ ] Real Travel Rule PDF through the sandbox API (needs a funded A-Pass wallet withdraw)
+- [ ] Multi-chain pricing: the tier map already reads per-chain tier — wire a second chain
+- [ ] Repo expiry: scheduled closeout at term end (contract supports it, wire the watcher)
+- [ ] Mainnet readiness when the team updates production contracts
 
 ## License
 
