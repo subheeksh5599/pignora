@@ -69,7 +69,7 @@ export const api = {
     }>("/health"),
   identity: (address: string) => call<Identity>(`/identity/${address}`),
   setStatus: (address: string, status: IdentityStatus, tier?: number) =>
-    call<{ ok: boolean }>(`/identity/${address}/status`, {
+    call<{ ok: boolean; cleanverse?: { data?: { txHash?: string } } }>(`/identity/${address}/status`, {
       method: "POST",
       body: JSON.stringify({ status, tier }),
     }),

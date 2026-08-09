@@ -37,6 +37,7 @@ export default function DashboardPage() {
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [lastEventTx, setLastEventTx] = useState<string | null>(null);
 
   // open-repo form
   const [borrower, setBorrower] = useState(TIER3);
@@ -108,7 +109,8 @@ export default function DashboardPage() {
     setError(null);
     try {
       // sandbox: FROZEN maps to the REAL Cleanverse update_status credential event
-      await api.setStatus(borrower, "FROZEN", 3);
+      const res = await api.setStatus(borrower, "FROZEN", 3);
+      setLastEventTx(res.cleanverse?.data?.txHash ?? null);
       await refresh();
     } catch (e) {
       setError((e as Error).message);
@@ -335,6 +337,16 @@ export default function DashboardPage() {
                 <CardDescription className="text-xs">
                   Freezing the borrower&apos;s A-Pass mid-term is the credential event: it calls the Cleanverse update_status endpoint, flips the on-chain gate, and triggers the rail&apos;s closeout.
                 </CardDescription>
+                {lastEventTx && (
+                  <a
+                    href={`https://testnet.monadscan.xyz/tx/${lastEventTx}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-block break-all font-mono text-[11px] text-destructive underline decoration-2 underline-offset-4 focus-ring"
+                  >
+                    credential event tx: {lastEventTx}
+                  </a>
+                )}
               </div>
               <Button
                 variant="outline"
