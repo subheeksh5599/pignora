@@ -68,7 +68,33 @@ app.post("/identity/:address/status", async (req, res) => {
   if (!status) return res.status(400).json({ error: "status required (ACTIVE|FROZEN|REVOKED|EXPIRED|UNVERIFIED)" });
   const updated = await relay.setProfile(req.params.address, { status, tier, expiry }, "manual");
   logAudit({ type: "credential_event", repoId: null, address: req.params.address, status, tier });
-  res.json({ ok: true, ...updated });
+
+  // A credential event is a protocol event: a frozen/revoked/expired borrower's
+  // open repos close out automatically (the on-chain gate flips -> closeout).
+  // Reason uses the A-Pass status code, matching the reference settlement
+  // (freeze = borrower_2, revoke = borrower_3, expiry = borrower_4).
+  const STATUS_CODE = { FROZEN: 2, REVOKED: 3, EXPIRED: 4 };
+  let closedOut = 0;
+  if (STATUS_CODE[status]) {
+    const addr = req.params.address.toLowerCase();
+    const affected = repoStore
+      .list()
+      .filter((r) => r.status === "OPEN" && r.borrower.toLowerCase() === addr);
+    closedOut = affected.length;
+    for (const r of affected) {
+      r.status = "CLOSED_OUT";
+      r.closeout = {
+        reason: `borrower_${STATUS_CODE[status]}`,
+        executedAt: new Date().toISOString(),
+        collateralToLender: r.collateralAmount,
+        escrowed: r.collateralAmount,
+      };
+      repoStore.update(r.id, r);
+      logAudit({ type: "repo_closeout", repoId: r.id, reason: r.closeout.reason, travelRule: r.travelRule });
+    }
+  }
+
+  res.json({ ok: true, ...updated, closedOut });
 });
 
 app.get("/policy", (_req, res) => {
