@@ -87,7 +87,7 @@ export default function App() {
           <a href="#top" className="font-display text-2xl font-bold uppercase tracking-tight focus-ring">
             Pignora
           </a>
-          <div className="hidden items-center gap-8 text-xs text-muted md:flex">
+          <div className="hidden items-center gap-8 text-xs text-muted-foreground md:flex">
             <a href="#mechanism" className="uppercase tracking-widest transition-colors hover:text-ink focus-ring">
               Mechanism
             </a>
@@ -118,15 +118,15 @@ export default function App() {
               <span className="h-1.5 w-1.5 rounded-full bg-ink" aria-hidden="true" />
               {health ? `${health.chain} testnet · ${health.mode}` : "checking live api"}
             </span>
-            <span className="mono-label text-muted">Cleanverse Build · Trusted Assets</span>
+            <span className="mono-label text-muted-foreground">Cleanverse Build · Trusted Assets</span>
           </div>
 
           <h1 className="mt-8 max-w-4xl font-display text-[clamp(3rem,9vw,7.5rem)] font-bold uppercase leading-[0.9] tracking-tight">
             The repo desk that closes out{" "}
-            <span className="serif-it lowercase text-muted">when trust does</span>
+            <span className="serif-it lowercase text-muted-foreground">when trust does</span>
           </h1>
 
-          <p className="mt-6 max-w-xl text-sm leading-relaxed text-muted">
+          <p className="mt-6 max-w-xl text-sm leading-relaxed text-muted-foreground">
             Pignora is a compliant repo rail for tokenized assets on Monad.
             Your Cleanverse A-Pass tier prices the lending cap, and a
             credential event mid-term triggers a defined, on-chain closeout.
@@ -171,9 +171,9 @@ export default function App() {
           <div className="flex flex-wrap items-end justify-between gap-6">
             <h2 className="font-display text-4xl font-bold uppercase tracking-tight md:text-6xl">
               Four moves,<br />
-              <span className="serif-it lowercase text-muted">one rail</span>
+              <span className="serif-it lowercase text-muted-foreground">one rail</span>
             </h2>
-            <p className="max-w-sm text-sm leading-relaxed text-muted">
+            <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
               Identity is the pricing engine and the enforcement trigger, not
               a gate. The same bond, different terms, because of who you are
               verified to be.
@@ -184,9 +184,9 @@ export default function App() {
           <div className="mt-12 border-2 border-ink bg-ink p-1.5">
             <div className="bg-bone p-6 md:p-8">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <span className="mono-label text-muted">Credential event</span>
-                <span className="mono-label text-muted">Mid-term</span>
-                <span className="mono-label text-muted">On-chain settlement</span>
+                <span className="mono-label text-muted-foreground">Credential event</span>
+                <span className="mono-label text-muted-foreground">Mid-term</span>
+                <span className="mono-label text-muted-foreground">On-chain settlement</span>
               </div>
               <div className="mt-6">
                 <div className="grid grid-cols-4 gap-1 md:gap-2">
@@ -203,14 +203,14 @@ export default function App() {
                       <span className="mt-1 block font-display text-lg font-bold uppercase leading-none tracking-tight md:text-2xl">
                         {s.label}
                       </span>
-                      <span className="mono-label mt-1 hidden text-muted md:block">{s.sub}</span>
+                      <span className="mono-label mt-1 hidden text-muted-foreground md:block">{s.sub}</span>
                     </div>
                   ))}
                 </div>
                 <div className="mt-2 h-2 bg-ink/10">
                   <div className="h-full bg-signal transition-all duration-700 ease-out" style={{ width: `${(activeStep + 1) * 25}%` }} />
                 </div>
-                <p className="mono-label mt-3 text-muted">
+                <p className="mono-label mt-3 text-muted-foreground">
                   {activeStep < 3
                     ? `Step ${activeStep + 1} of 4: ${["identity gate", "tier-priced cap", "escrow both legs", "closeout on the event"][activeStep]}`
                     : "Closeout: lender covered, excess fail-closed to escrow until identity restores"}
@@ -300,7 +300,7 @@ export default function App() {
         <section id="proof" className="mx-auto max-w-6xl px-6 py-20 md:py-28">
           <h2 className="font-display text-4xl font-bold uppercase tracking-tight md:text-6xl">
             Verify it<br />
-            <span className="serif-it lowercase text-muted">yourself</span>
+            <span className="serif-it lowercase text-muted-foreground">yourself</span>
           </h2>
 
           <div className="mt-10 border-2 border-ink bg-ink p-5 text-bone md:p-7">
@@ -335,7 +335,7 @@ export default function App() {
 
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-8">
-          <span className="mono-label text-muted">
+          <span className="mono-label text-muted-foreground">
             Pignora · Cleanverse Build · Trusted Assets
           </span>
           <div className="flex gap-6 text-xs">
