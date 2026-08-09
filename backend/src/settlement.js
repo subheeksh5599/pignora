@@ -64,18 +64,24 @@ export async function openRepoOnchain({ borrower, lender, collateralAmount, cash
   const pl = await cleanverse.queryApass(lenderWallet.address);
   if (!pl) throw new Error(`lender ${lenderWallet.address} has no A-Pass`);
 
-  // cash leg: prefer aUSDC; fall back to MockUSD when the migrated pair has no funds
-  let cash = usdc;
-  let cashLabel = "aUSDC";
+  // cash leg: prefer the lender's held aUSDC (correct address 0xaC0893…);
+  // else fall back to MockUSD which transfers freely through the desk.
+  // (PNGUSD is issued as Pignora's CVA but its A-Token transfer gate blocks
+  // transfers to the desk — the same compliance blocker the team confirmed
+  // for aUSDC; settlement txs are real regardless of the cash token.)
+  let cash = null;
+  let cashLabel = "";
   const cashBig = BigInt(String(cashAmount));
-  if ((await usdc.balanceOf(lenderWallet.address)) < cashBig && MOCK_USD) {
+  if ((await usdc.balanceOf(lenderWallet.address)) >= cashBig) {
+    cash = usdc;
+    cashLabel = "aUSDC";
+  } else if (MOCK_USD) {
     cash = new Contract(MOCK_USD, loadABI("MockUSD"), p);
     cashLabel = "MockUSD";
-  }
-  if (cashLabel === "MockUSD") {
     const c = cash.connect(borrowerWallet);
     await c.mint(lenderWallet.address, cashBig).then((t) => t.wait());
   }
+  if (!cash) throw new Error("no cash token available");
 
   // collateral: borrower mints BOND + approves desk
   const bondBig = BigInt(String(collateralAmount));
