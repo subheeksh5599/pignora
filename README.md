@@ -93,10 +93,10 @@ receive a single unit.
 
 | | |
 |:--|:--|
-| Identity gate + open repo — tier prices the lending cap | Credential event — closeout state |
-| ![identity + open](docs/media/1.png) | ![closeout](docs/media/2.png) |
-| Audit pack console | Architecture |
-| ![audit](docs/media/3.png) | ![architecture](docs/media/4.png) |
+| Desk — verified identity prices the cap, positions carry real tx links | Audit pack console (event ledger + PDF artifact) |
+| ![desk](docs/media/1.png) | ![audit](docs/media/2.png) |
+| Landing — live policy + health terminal | Repo table — open/closeout tx hashes on MonadScan |
+| ![landing](docs/media/3.png) | ![repos](docs/media/4.png) |
 
 ## How Pignora works
 
@@ -129,6 +129,13 @@ until repayment, with a 105% maintenance margin enforced on-chain.
 A credential event mid-term flips the on-chain gate and settles the repo in
 defined numbers: lender covered to the obligation, borrower excess
 fail-closed to escrow. The closeout lands in the same click as the event.
+
+Credential events are EIP-712 signed by the operator wallet (MetaMask, via
+the desk's "Connect wallet" button) before the backend executes them. The
+signature domain binds to the RepoDesk contract on Monad testnet (chain
+10143), so a freeze cannot be spoofed by a random caller — the backend
+verifies the recovered signer against the operator key and records it in
+the audit log.
 
 ## Transactions — the evidence
 
