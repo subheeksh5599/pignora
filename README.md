@@ -94,8 +94,11 @@ cd contracts && forge build && forge test
 # backend (live sandbox — add CLEANVERSE_API_ID / CLEANVERSE_API_KEY to .env)
 cd backend && cp .env.example .env && npm install && npm test && node src/server.js
 
-# frontend
+# frontend (desk)
 cd frontend && npm install && npm run dev  # :3000 -> /dashboard
+
+# landing (marketing site)
+cd landing && npm install && npm run dev   # :5173 (Vite) or `npm run build && npm run preview`
 
 # Monad testnet deploy (needs a funded PRIVATE_KEY)
 export PRIVATE_KEY=... && bash scripts/deploy-monad.sh
@@ -112,7 +115,8 @@ export PRIVATE_KEY=... && bash scripts/deploy-monad.sh
 ```
 contracts/   Foundry — IdentityRegistry, RepoDesk, mocks, 22 tests, deploy script
 backend/     Node API — Cleanverse client (AES-CBC), relay, audit (JSONL + PDF), tests, E2E scripts
-frontend/    Next.js treasury desk
+frontend/    Next.js treasury desk (shadcn/ui, live API reads)
+landing/     Vite + React marketing site (hero video, live policy/health)
 scripts/     deploy-monad.sh (one-command testnet pipeline)
 docs/        one-pager, demo script, application copy, screenshots
 ```
