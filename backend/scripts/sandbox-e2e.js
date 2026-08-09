@@ -6,7 +6,7 @@
  *   anvil --port 8545 &
  *   forge script script/Deploy.s.sol --rpc-url http://localhost:8545 --broadcast
  *   IDENTITY_REGISTRY_ADDRESS=0x.. REPO_DESK_ADDRESS=0x.. MOCK_USD=0x.. MOCK_BOND=0..
- *   RELAY_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 \
+ *   RELAY_KEY=<anvil default private key> \
  *   MONAD_RPC=http://localhost:8545 node scripts/sandbox-e2e.js
  */
 import "dotenv/config";
