@@ -111,10 +111,6 @@ export default function App() {
             >
               <source src="/video/hero.mp4" type="video/mp4" />
             </video>
-            <div className="flex items-center justify-between border-t-2 border-ink bg-signal px-4 py-2">
-              <span className="text-[11px] font-semibold uppercase tracking-widest">The desk, live</span>
-              <span className="text-[11px] font-semibold uppercase tracking-widest">Monad testnet · sandbox</span>
-            </div>
           </div>
         </section>
 
