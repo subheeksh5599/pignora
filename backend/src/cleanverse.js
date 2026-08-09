@@ -33,6 +33,17 @@ class CleanverseClient {
         "0x4444444444444444444444444444444444444444",
         { status: "REVOKED", tier: 3, expiry: 0, cvRecordId: "mock-cv-revoked" },
       ],
+      // Local clone-and-run seed accounts (dev-up.sh): the same wallets the
+      // E2E seed mirrors on-chain — anvil #0 (tier 50, 2% cap) and anvil #1
+      // (tier 20, 5% cap). Keeps the desk usable with no Cleanverse creds.
+      [
+        "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+        { status: "ACTIVE", tier: 50, expiry: 4102444800, cvRecordId: "seed-cv-t50" },
+      ],
+      [
+        "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+        { status: "ACTIVE", tier: 20, expiry: 4102444800, cvRecordId: "seed-cv-t20" },
+      ],
     ]);
   }
 

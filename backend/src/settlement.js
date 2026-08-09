@@ -21,8 +21,11 @@ const MOCK_USD = config.mockUsd || "";
 const BOND_DEC = 6;
 
 export function isLive() {
+  // Real on-chain settlement whenever the chain stack is configured — local
+  // anvil (MODE=mock, no Cleanverse creds) or Monad testnet (MODE=sandbox).
+  // The identity oracle is Cleanverse (stubbed without creds); the settlement
+  // itself is always a real contract transaction.
   return (
-    config.mode === "sandbox" &&
     Boolean(config.relayKey && config.lenderKey && config.monadRpc && config.repoDesk && config.identityRegistry && config.ausdc && config.bond)
   );
 }
@@ -45,10 +48,10 @@ export async function openRepoOnchain({ borrower, lender, collateralAmount, cash
   const desk = new Contract(config.repoDesk, loadABI("RepoDesk"), p);
   const bond = new Contract(BOND, loadABI("MockBond"), p);
   const usdc = new Contract(AUSDC, loadABI("ERC20"), p);
-  let bn = await borrowerWallet.getNonce();
-  let ln = await lenderWallet.getNonce();
-  const btx = (fn) => fn({ nonce: bn++ });
-  const ltx = (fn) => fn({ nonce: ln++ });
+  // ethers v6 auto-manages nonces per wallet across sequential sends in this
+  // process (no manual counters that can go stale against the chain).
+  const btx = (fn) => fn();
+  const ltx = (fn) => fn();
 
   // borrower = relay key holder (deployer). Mirror identity on-chain if needed.
   const pb = await cleanverse.queryApass(borrowerWallet.address);
@@ -72,10 +75,16 @@ export async function openRepoOnchain({ borrower, lender, collateralAmount, cash
   let cash = null;
   let cashLabel = "";
   const cashBig = BigInt(String(cashAmount));
-  if ((await usdc.balanceOf(lenderWallet.address)) >= cashBig) {
-    cash = usdc;
-    cashLabel = "aUSDC";
-  } else if (MOCK_USD) {
+  try {
+    const held = await usdc.balanceOf(lenderWallet.address);
+    if (held >= cashBig) {
+      cash = usdc;
+      cashLabel = "aUSDC";
+    }
+  } catch {
+    // aUSDC not deployed on this chain (local anvil) — fall through to MockUSD
+  }
+  if (!cash && MOCK_USD) {
     cash = new Contract(MOCK_USD, loadABI("MockUSD"), p);
     cashLabel = "MockUSD";
     const c = cash.connect(borrowerWallet);
@@ -193,6 +202,16 @@ async function registryActive(address) {
   const p = provider();
   const registry = new Contract(config.identityRegistry, loadABI("IdentityRegistry"), p);
   return registry.isActive(address);
+}
+
+/** Read a profile straight from the on-chain IdentityRegistry (mock/local runs). */
+export async function registryProfile(address) {
+  const p = provider();
+  const registry = new Contract(config.identityRegistry, loadABI("IdentityRegistry"), p);
+  const tier = await registry.tierOf(address);
+  const active = await registry.isActive(address);
+  const haircut = await registry.haircutOf(address);
+  return { tier: String(tier), status: active ? 1 : 2, haircutBps: Number(haircut), onChain: true };
 }
 
 async function setProfile(address, profile, status) {

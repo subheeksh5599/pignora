@@ -1,7 +1,7 @@
 import "dotenv/config";
 
 export const config = {
-  mode: process.env.CLEANVERSE_MODE || "sandbox",
+  mode: process.env.CLEANVERSE_MODE || process.env.MODE || "sandbox",
   apiBase: process.env.CLEANVERSE_API || "https://uatapi.cleanverse.com/api/skills",
   cooperateBase: process.env.CLEANVERSE_COOPERATE_API || "https://uatapi.cleanverse.com/api/cooperate",
   apiId: process.env.CLEANVERSE_API_ID || "",

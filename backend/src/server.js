@@ -6,7 +6,7 @@ import { relay } from "./relay.js";
 import { haircutForTier, maxLend } from "./config.js";
 import { logAudit, readAudit, buildAuditPack } from "./audit.js";
 import { repoStore } from "./repoStore.js";
-import { isLive, openRepoOnchain, closeoutOnchain, listReposOnchain, repoTxHashes } from "./settlement.js";
+import { isLive, openRepoOnchain, closeoutOnchain, listReposOnchain, repoTxHashes, registryProfile } from "./settlement.js";
 
 const app = express();
 app.use(express.json());
@@ -47,6 +47,28 @@ app.get("/health", async (_req, res) => {
 // --------------------------------------------------------------- identity
 
 app.get("/identity/:address", async (req, res) => {
+  // Local clone-and-run (no Cleanverse creds): read the REAL on-chain
+  // IdentityRegistry mirror — the seeded A-Passes live there as contract
+  // state. With creds (sandbox), query the live Cleanverse API.
+  if (cleanverse.isMock()) {
+    try {
+      const rp = await registryProfile(req.params.address);
+      return res.json({
+        address: req.params.address,
+        verified: rp.status === 1,
+        code: rp.status === 1 ? 0 : 1,
+        tier: rp.tier,
+        status: rp.status,
+        expiry: null,
+        cvRecordId: rp.onChain ? "on-chain" : null,
+        haircutBps: rp.haircutBps,
+        mode: "mock",
+        source: "on-chain registry",
+      });
+    } catch (e) {
+      return res.json({ address: req.params.address, verified: false, mode: "mock", error: e.message.slice(0, 80) });
+    }
+  }
   const profile = await cleanverse.queryApass(req.params.address);
   if (!profile) return res.status(404).json({ address: req.params.address, verified: false });
   const v = await cleanverse.verifyApass(req.params.address);
