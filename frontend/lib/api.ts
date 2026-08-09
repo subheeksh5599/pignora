@@ -1,6 +1,6 @@
 "use client";
 
-/** Backend client (Pignora API on :8787). Mock mode by default. */
+/** Backend client (Pignora API on :8787). */
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8787";
 
 export type IdentityStatus = "ACTIVE" | "FROZEN" | "REVOKED" | "EXPIRED" | "UNVERIFIED";
@@ -14,7 +14,7 @@ export interface Identity {
   expiry: number;
   cvRecordId: string;
   haircutBps: number;
-  mode: "mock" | "sandbox";
+  mode: string;
 }
 
 export interface Repo {

@@ -164,10 +164,21 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-2 bg-primary px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-primary-foreground">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              {mode === "sandbox" ? "Sandbox" : "Mock"} mode
-            </span>
+            {mode === "…" ? (
+              <span className="border-2 border-border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Checking
+              </span>
+            ) : mode === "sandbox" ? (
+              <span className="flex items-center gap-2 bg-primary px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-primary-foreground">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Sandbox mode
+              </span>
+            ) : (
+              <span className="flex items-center gap-2 border-2 border-destructive px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-destructive">
+                <ShieldOff className="h-3.5 w-3.5" />
+                Backend offline
+              </span>
+            )}
             <Button variant="outline" size="sm" onClick={refresh} disabled={busy !== null}>
               <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${busy ? "animate-spin" : ""}`} />
               Refresh
