@@ -336,7 +336,7 @@ export default function DashboardPage() {
                 Open a repo
               </CardTitle>
               <CardDescription className="text-xs">
-                The cash leg is capped by the borrower&apos;s tier: 50+ = 2%, 20+ = 5%, basic = 10%. Settlement in aUSDC, Travel Rule attributed.
+                The cash leg is capped by the borrower&apos;s tier: 50+ = 2%, 20+ = 5%, basic = 10%. Settlement in a USD-pegged CVA, Travel Rule attributed.
               </CardDescription>
             </CardHeader>
             <CardContent>

@@ -18,8 +18,8 @@
 Pignora is a compliant repo rail for tokenized assets on Monad. The lending
 cap is priced by the counterparty's Cleanverse A-Pass tier, and a credential
 event mid-term triggers a defined, on-chain closeout — no freeze-and-hope.
-Every leg settles in aUSDC, Travel Rule-attributed, with an append-only audit
-pack.
+Every leg is Travel Rule-attributed, with an append-only audit pack, and the
+on-chain settlement escrows a USD-pegged CVA cash token.
 
 ### ▶ Live now at **[pignora-desk.vercel.app](https://pignora-desk.vercel.app)**
 
@@ -59,20 +59,24 @@ MIT licensed.
 
 ## ▶ See it in one command
 
-Three terminals, one repo:
-
 ```bash
-# 1 — backend (sandbox mode: real Cleanverse API + Monad testnet)
-cd backend && cp .env.example .env && npm install && npm test && node src/server.js
-
-# 2 — frontend (landing at /, desk at /dashboard)
-cd frontend && npm install && npm run dev
+git clone https://github.com/subheeksh5599/pignora && cd pignora
+npm --prefix backend ci && npm --prefix frontend ci
+./scripts/dev-up.sh
 ```
 
-Open http://localhost:3000 — the identity panel auto-verifies a real A-Pass,
-you open a repo, freeze the borrower's credential, and the position closes out
-in the same click. Every number on screen is fetched from the live backend:
-no mock data, no simulation.
+`dev-up.sh` starts a local anvil chain, deploys the contracts, seeds both
+parties' A-Passes on-chain, and brings up the backend (:8787) + frontend
+(:3000). Every repo open / freeze / closeout is a REAL transaction on the
+local chain with a real hash — no Cleanverse credentials, no hardcoded
+addresses, no simulation. Swap `MONAD_RPC` / `PRIVATE_KEY` env vars to point
+the same stack at Monad testnet.
+
+Or use the live deployment: open https://pignora-desk.vercel.app/dashboard —
+the identity panel auto-verifies a real A-Pass, you open a repo, freeze the
+borrower's credential, and the position closes out in the same click. Every
+number on screen is fetched from the live backend: no mock data, no
+simulation.
 
 ---
 
@@ -121,8 +125,13 @@ verified to be.
 
 ### 3 · Escrow
 
-Collateral (a tokenized bond) and the aUSDC cash leg lock in the RepoDesk
-until repayment, with a 105% maintenance margin enforced on-chain.
+Collateral (a tokenized bond) and the cash leg lock in the RepoDesk until
+repayment, with a 105% maintenance margin enforced on-chain. The cash leg
+settles in a USD-pegged CVA token that transfers freely to the desk: the
+aUSDC A-Token itself only transfers between registered vaults (the sponsor's
+`registerApass` gate), which is pending on the testnet — so the settled
+repos on-chain used the free-transfer stand-in, exactly like every other
+Cleanverse team.
 
 ### 4 · Close
 
@@ -148,7 +157,7 @@ A real repo was settled on Monad testnet with real A-Pass-verified parties
 | Freeze credential event (real `update_status`) | [`0x7df33be6…`](https://testnet.monadscan.xyz/tx/0x7df33be6172afcc4da0832b4c6291af0bd45511c32e40e1ae67d71df929d27e0) |
 | Closeout — lender 98.49% obligation coverage, excess fail-closed | [`0x10241e21…`](https://testnet.monadscan.xyz/tx/0x10241e21e819c65878db6f03e4f21d5f93d848ae941dafc147cd0ff5cabe59ae) |
 
-Deployed contracts: [RepoDesk `0x398D45F5…`](https://testnet.monadscan.xyz/address/0x398D45F56F759Cd4b4cf0be07C2C4AADf7327edA) · [IdentityRegistry `0xdcb88994…`](https://testnet.monadscan.xyz/address/0xdcb889940B95FF9625d76a735DaCdFEB979aD4C2) · aUSDC `0xfa96de5b…` (migrated pair) · A-Pass `0xbA82D189…`
+Deployed contracts: [RepoDesk `0x398D45F5…`](https://testnet.monadscan.xyz/address/0x398D45F56F759Cd4b4cf0be07C2C4AADf7327edA) · [IdentityRegistry `0xdcb88994…`](https://testnet.monadscan.xyz/address/0xdcb889940B95FF9625d76a735DaCdFEB979aD4C2) · aUSDC `0xaC089356…` (canonical, per the Cleanverse team) · Pignora CVA (PNGUSD) `0x231B9899…`
 
 ## Architecture
 
@@ -197,8 +206,8 @@ sequenceDiagram
 | Credential event auto-closes open repos | ✅ Real (verified in the live walk) |
 | Desk reads live identity / policy / health | ✅ Real (deployed API, sandbox mode) |
 | Cleanverse identity rail (CVI) | ✅ Real (query_apass + update_status) |
-| Settlement token is aUSDC (CVA) | ✅ Real contract, migrated pair |
-| Real aUSDC cash leg with a fresh Circle deposit | ⏳ Pending — pair migrated; deposit address re-provisioning with the team |
+| Settlement cash token | ✅ Real on-chain (USD-pegged CVA stand-in; the aUSDC A-Token transfer gate needs vault registration, pending) |
+| Real aUSDC cash leg with a fresh Circle deposit | ⏳ Pending — vault registration (`registerApass`) + deposit re-provisioning with the team |
 | Real Travel Rule PDF via `download_travel_rule` | ⏳ Pending — needs a withdraw tx from a funded A-Pass wallet (same dependency) |
 | Mainnet deployment | ❌ Not applicable — team guidance: testnet is the build target |
 
@@ -219,21 +228,20 @@ CI runs both suites plus the frontend typecheck + build on every push.
 ## Run it locally
 
 ```bash
-# contracts
-cd contracts && forge build && forge test
+# everything in one command (anvil chain + contracts + backend + frontend)
+./scripts/dev-up.sh
 
-# backend (live sandbox — add CLEANVERSE_API_ID / CLEANVERSE_API_KEY to .env)
-cd backend && cp .env.example .env && npm install && npm test && node src/server.js
-
-# frontend (landing + desk in one app)
-cd frontend && npm install && npm run dev  # :3000 -> / (landing) and /dashboard (desk)
-
-# Monad testnet deploy (needs a funded PRIVATE_KEY)
-export PRIVATE_KEY=... && bash scripts/deploy-monad.sh
+# or piece by piece
+cd contracts && forge build && forge test        # 22 passing
+cd backend && npm install && npm test            # 8 passing
+cd frontend && npm install && npm run dev        # :3000 -> / and /dashboard
 ```
 
-No keys? The backend still boots in mock mode for local development; the
-deployed API runs sandbox against the real Cleanverse sandbox.
+For the live sandbox (real Cleanverse API + Monad testnet), add
+CLEANVERSE_API_ID / CLEANVERSE_API_KEY to backend/.env and run the backend
+in sandbox mode. No keys? The backend boots in mock mode with the on-chain
+registry as the identity source — the settlement still runs real contract
+transactions on your local anvil chain.
 
 ## Deploy
 
@@ -249,7 +257,7 @@ cd frontend && vercel deploy --prod --yes
 contracts/   Foundry — IdentityRegistry, RepoDesk, mocks, 22 tests, deploy script
 backend/     Node API — Cleanverse client (AES-CBC), relay, audit (JSONL + PDF), tests, E2E scripts
 frontend/    Next.js — landing page (/) + treasury desk (/dashboard) on shadcn/ui, live API reads
-scripts/     deploy-monad.sh (one-command testnet pipeline)
+scripts/     dev-up.sh (one-command local stack) + deploy-monad.sh (testnet pipeline)
 docs/        one-pager, demo script, submission email, screenshots
 .github/     CI — forge test, backend tests, frontend typecheck + build
 ```
@@ -264,7 +272,7 @@ docs/        one-pager, demo script, submission email, screenshots
 
 ## Roadmap
 
-- [ ] Real aUSDC cash leg E2E on the migrated pair (deposit re-provisioning with the team)
+- [ ] Real aUSDC cash leg on the migrated pair (vault registration `registerApass` + deposit re-provisioning with the team)
 - [ ] Real Travel Rule PDF through the sandbox API (needs a funded A-Pass wallet withdraw)
 - [ ] Multi-chain pricing: the tier map already reads per-chain tier — wire a second chain
 - [ ] Repo expiry: scheduled closeout at term end (contract supports it, wire the watcher)
