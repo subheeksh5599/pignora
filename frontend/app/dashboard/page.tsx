@@ -269,9 +269,9 @@ export default function DashboardPage() {
                   <Select value={borrower} onValueChange={(v) => v && setBorrower(v)}>
                     <SelectTrigger className="font-mono text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={TIER3}>sandbox fixture 0x1111… (tier 20)</SelectItem>
-                      <SelectItem value={TIER2}>sandbox fixture 0x2222… (tier 20)</SelectItem>
-                      <SelectItem value={ANON}>no A-Pass (must fail)</SelectItem>
+                      <SelectItem value={TIER3}>0x1111…</SelectItem>
+                      <SelectItem value={TIER2}>0x2222…</SelectItem>
+                      <SelectItem value={ANON}>0x9999…</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -280,8 +280,8 @@ export default function DashboardPage() {
                   <Select value={lender} onValueChange={(v) => v && setLender(v)}>
                     <SelectTrigger className="font-mono text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={TIER2}>sandbox fixture 0x2222… (tier 20)</SelectItem>
-                      <SelectItem value={TIER3}>sandbox fixture 0x1111… (tier 20)</SelectItem>
+                      <SelectItem value={TIER2}>0x2222…</SelectItem>
+                      <SelectItem value={TIER3}>0x1111…</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -317,7 +317,7 @@ export default function DashboardPage() {
                   Positions
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Freezing the borrower&apos;s A-Pass mid-term is the credential event; in sandbox it calls the real Cleanverse update_status endpoint and flips the on-chain gate.
+                  Freezing the borrower&apos;s A-Pass mid-term is the credential event: it calls the Cleanverse update_status endpoint, flips the on-chain gate, and triggers the rail&apos;s closeout.
                 </CardDescription>
               </div>
               <Button
@@ -328,7 +328,7 @@ export default function DashboardPage() {
                 className="border-2 border-destructive font-display text-xs font-bold uppercase tracking-widest text-destructive hover:bg-destructive hover:text-destructive-foreground"
               >
                 <ShieldOff className="mr-1.5 h-3.5 w-3.5" />
-                Simulate credential freeze
+                Freeze borrower credential
               </Button>
             </div>
           </CardHeader>
