@@ -480,7 +480,7 @@ export default function DashboardPage() {
                 )}
                 {lastEventTx && (
                   <a
-                    href={`https://testnet.monadscan.xyz/tx/${lastEventTx}`}
+                    href={`https://testnet.monadvision.com/tx/${lastEventTx}`}
                     target="_blank"
                     rel="noreferrer"
                     className="mt-2 inline-block break-all font-mono text-[11px] text-destructive underline decoration-2 underline-offset-4 focus-ring"
@@ -535,7 +535,7 @@ export default function DashboardPage() {
                     <TableCell className="font-mono text-[10px] leading-4">
                       {r.onchain?.txHash ? (
                         <a
-                          href={`https://testnet.monadscan.xyz/tx/${r.onchain.txHash}`}
+                          href={`https://testnet.monadvision.com/tx/${r.onchain.txHash}`}
                           target="_blank"
                           rel="noreferrer"
                           className="text-foreground underline decoration-2 underline-offset-2 hover:text-muted-foreground focus-ring"
@@ -548,7 +548,7 @@ export default function DashboardPage() {
                       )}
                       {r.closeout?.txHash && (
                         <a
-                          href={`https://testnet.monadscan.xyz/tx/${r.closeout.txHash}`}
+                          href={`https://testnet.monadvision.com/tx/${r.closeout.txHash}`}
                           target="_blank"
                           rel="noreferrer"
                           className="mt-1 block text-destructive underline decoration-2 underline-offset-2 hover:text-destructive/70 focus-ring"

@@ -5,7 +5,7 @@
 &nbsp;
 
 [![Live app](https://img.shields.io/badge/●_live-pignora--desk.vercel.app-0a0a0a)](https://pignora-desk.vercel.app)
-[![RepoDesk on MonadScan](https://img.shields.io/badge/📜_RepoDesk_Monad_testnet-0a0a0a)](https://testnet.monadscan.xyz/address/0x398D45F56F759Cd4b4cf0be07C2C4AADf7327edA)
+[![RepoDesk on MonadScan](https://img.shields.io/badge/📜_RepoDesk_Monad_testnet-0a0a0a)](https://testnet.monadvision.com/address/0x398D45F56F759Cd4b4cf0be07C2C4AADf7327edA)
 [![License: MIT](https://img.shields.io/badge/license-MIT-0a0a0a.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-30%20passing-0a0a0a)](https://github.com/subheeksh5599/pignora/actions)
 [![CI](https://img.shields.io/github/actions/workflow/status/subheeksh5599/pignora/ci.yml?branch=main&label=CI)](https://github.com/subheeksh5599/pignora/actions)
@@ -162,10 +162,10 @@ A real repo was settled on Monad testnet with real A-Pass-verified parties
 | Step | Transaction |
 |:-----|:------------|
 | Repo open at the tier-priced 2% lending cap | `0xb6fff6a9…` (truncated in docs; on-chain) |
-| Freeze credential event (real `update_status`) | [`0x7df33be6…`](https://testnet.monadscan.xyz/tx/0x7df33be6172afcc4da0832b4c6291af0bd45511c32e40e1ae67d71df929d27e0) |
-| Closeout — lender 98.49% obligation coverage, excess fail-closed | [`0x10241e21…`](https://testnet.monadscan.xyz/tx/0x10241e21e819c65878db6f03e4f21d5f93d848ae941dafc147cd0ff5cabe59ae) |
+| Freeze credential event (real `update_status`) | [`0x7df33be6…`](https://testnet.monadvision.com/tx/0x7df33be6172afcc4da0832b4c6291af0bd45511c32e40e1ae67d71df929d27e0) |
+| Closeout — lender 98.49% obligation coverage, excess fail-closed | [`0x10241e21…`](https://testnet.monadvision.com/tx/0x10241e21e819c65878db6f03e4f21d5f93d848ae941dafc147cd0ff5cabe59ae) |
 
-Deployed contracts: [RepoDesk `0x398D45F5…`](https://testnet.monadscan.xyz/address/0x398D45F56F759Cd4b4cf0be07C2C4AADf7327edA) · [IdentityRegistry `0xdcb88994…`](https://testnet.monadscan.xyz/address/0xdcb889940B95FF9625d76a735DaCdFEB979aD4C2) · aUSDC `0xaC089356…` (canonical, per the Cleanverse team) · Pignora CVA (PNGUSD) `0x231B9899…`
+Deployed contracts: [RepoDesk `0x398D45F5…`](https://testnet.monadvision.com/address/0x398D45F56F759Cd4b4cf0be07C2C4AADf7327edA) · [IdentityRegistry `0xdcb88994…`](https://testnet.monadvision.com/address/0xdcb889940B95FF9625d76a735DaCdFEB979aD4C2) · aUSDC `0xaC089356…` (canonical, per the Cleanverse team) · Pignora CVA (PNGUSD) `0x231B9899…`
 
 ## Architecture
 

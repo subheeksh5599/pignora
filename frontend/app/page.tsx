@@ -324,7 +324,7 @@ export default function App() {
                 <>
                   Latest repo #{latest.id}, settled on Monad testnet with real A-Pass-verified parties. Open tx{" "}
                   <a
-                    href={`https://testnet.monadscan.xyz/tx/${latest.onchain.txHash}`}
+                    href={`https://testnet.monadvision.com/tx/${latest.onchain.txHash}`}
                     className="font-semibold underline decoration-2 underline-offset-4 focus-ring"
                   >
                     {latest.onchain.txHash.slice(0, 10)}…
@@ -334,7 +334,7 @@ export default function App() {
                       {" "}
                       · closeout{" "}
                       <a
-                        href={`https://testnet.monadscan.xyz/tx/${latest.closeout.txHash}`}
+                        href={`https://testnet.monadvision.com/tx/${latest.closeout.txHash}`}
                         className="font-semibold underline decoration-2 underline-offset-4 focus-ring"
                       >
                         {latest.closeout.txHash.slice(0, 10)}…
@@ -347,7 +347,7 @@ export default function App() {
                   The reference settlement, settled on Monad testnet with real
                   A-Pass-verified parties. Closeout tx{" "}
                   <a
-                    href="https://testnet.monadscan.xyz/tx/0x10241e21e819c65878db6f03e4f21d5f93d848ae941dafc147cd0ff5cabe59ae"
+                    href="https://testnet.monadvision.com/tx/0x10241e21e819c65878db6f03e4f21d5f93d848ae941dafc147cd0ff5cabe59ae"
                     className="font-semibold underline decoration-2 underline-offset-4 focus-ring"
                   >
                     0x10241e21…59ae
@@ -380,13 +380,13 @@ export default function App() {
 
           <div className="mt-6 flex flex-wrap gap-3">
             <a
-              href={`https://testnet.monadscan.xyz/address/${health?.contracts.repoDesk ?? ""}`}
+              href={`https://testnet.monadvision.com/address/${health?.contracts.repoDesk ?? ""}`}
               className="bg-ink px-5 py-2.5 text-xs font-semibold uppercase tracking-widest text-signal transition-transform hover:-translate-y-0.5 focus-ring"
             >
               RepoDesk on MonadScan
             </a>
             <a
-              href={`https://testnet.monadscan.xyz/address/${health?.contracts.registry ?? ""}`}
+              href={`https://testnet.monadvision.com/address/${health?.contracts.registry ?? ""}`}
               className="border border-ink px-5 py-2.5 text-xs font-semibold uppercase tracking-widest transition-colors hover:bg-ink hover:text-signal focus-ring"
             >
               IdentityRegistry on MonadScan

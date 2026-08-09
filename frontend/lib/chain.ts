@@ -11,7 +11,7 @@ export const IDENTITY_REGISTRY = "0xdcb889940B95FF9625d76a735DaCdFEB979aD4C2";
 export const BOND_TOKEN = "0x13211b8f5983BFDcd2a14D8467631254C3af5A89"; // MockBond (collateral)
 export const CASH_TOKEN = "0xA66155a4c3fF24C0300aFA66DE6ff8D5f7310AEA"; // free-transfer USD CVA stand-in
 export const CHAIN_ID = 10143;
-export const EXPLORER = "https://testnet.monadscan.xyz";
+export const EXPLORER = "https://testnet.monadvision.com";
 
 export const REPO_DESK_ABI = [
   {
