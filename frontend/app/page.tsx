@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
+import type { Repo } from "@/lib/api";
 
 const GITHUB_URL = "https://github.com/subheeksh5599/pignora";
 const DESK_URL = "/dashboard";
@@ -38,9 +39,24 @@ function usePolicy() {
   return policy;
 }
 
+function useLatestRepo() {
+  const [latest, setLatest] = useState<Repo | null>(null);
+  useEffect(() => {
+    api
+      .repos()
+      .then((d) => {
+        const closed = [...d.repos].reverse().find((r) => r.status === "CLOSED_OUT");
+        setLatest(closed ?? null);
+      })
+      .catch(() => {});
+  }, []);
+  return latest;
+}
+
 export default function App() {
   const { health, error } = useHealth();
   const policy = usePolicy();
+  const latest = useLatestRepo();
   const [activeStep, setActiveStep] = useState(0);
 
   // Auto-advance the mechanism pipeline once it scrolls into view; pause
@@ -267,15 +283,15 @@ export default function App() {
           </div>
         </section>
 
-        {/* closeout band */}
+        {/* closeout band: latest real settlement, read from the chain */}
         <section className="bg-danger text-ink">
           <div className="mx-auto max-w-6xl px-6 py-14">
             <div className="grid max-w-6xl grid-cols-2 gap-px bg-ink/15 md:grid-cols-4">
               {[
-                ["Obligation covered", "98.49%"],
-                ["Excess fail-closed", "15.1e9"],
-                ["Closeout reason", "borrower_2"],
-                ["Settlement", "defined"],
+                ["Obligation covered", latest ? `${((Number(latest.cashAmount) / Number(latest.collateralAmount)) * 100).toFixed(2)}%` : "98.49%"],
+                ["Collateral (BOND)", latest ? `${(Number(latest.collateralAmount) / 1e6).toLocaleString()}` : "15.1e9"],
+                ["Closeout reason", latest?.closeout?.reason ?? "borrower_2"],
+                ["Settlement", latest ? "on-chain" : "defined"],
               ].map(([k, v]) => (
                 <div key={k} className="px-6 py-8">
                   <p className="mono-label text-ink/70">{k}</p>
@@ -284,14 +300,40 @@ export default function App() {
               ))}
             </div>
             <p className="mono-label mt-4 text-ink/70">
-              The reference settlement, settled on Monad testnet with real
-              A-Pass-verified parties. Closeout tx{" "}
-              <a
-                href="https://testnet.monadscan.xyz/tx/0x10241e21e819c65878db6f03e4f21d5f93d848ae941dafc147cd0ff5cabe59ae"
-                className="font-semibold underline decoration-2 underline-offset-4 focus-ring"
-              >
-                0x10241e21…59ae
-              </a>
+              {latest?.onchain?.txHash ? (
+                <>
+                  Latest repo #{latest.id}, settled on Monad testnet with real A-Pass-verified parties. Open tx{" "}
+                  <a
+                    href={`https://testnet.monadscan.xyz/tx/${latest.onchain.txHash}`}
+                    className="font-semibold underline decoration-2 underline-offset-4 focus-ring"
+                  >
+                    {latest.onchain.txHash.slice(0, 10)}…
+                  </a>
+                  {latest.closeout?.txHash && (
+                    <>
+                      {" "}
+                      · closeout{" "}
+                      <a
+                        href={`https://testnet.monadscan.xyz/tx/${latest.closeout.txHash}`}
+                        className="font-semibold underline decoration-2 underline-offset-4 focus-ring"
+                      >
+                        {latest.closeout.txHash.slice(0, 10)}…
+                      </a>
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  The reference settlement, settled on Monad testnet with real
+                  A-Pass-verified parties. Closeout tx{" "}
+                  <a
+                    href="https://testnet.monadscan.xyz/tx/0x10241e21e819c65878db6f03e4f21d5f93d848ae941dafc147cd0ff5cabe59ae"
+                    className="font-semibold underline decoration-2 underline-offset-4 focus-ring"
+                  >
+                    0x10241e21…59ae
+                  </a>
+                </>
+              )}
             </p>
           </div>
         </section>
