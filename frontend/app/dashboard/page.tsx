@@ -174,6 +174,27 @@ export default function DashboardPage() {
     }
   }
 
+  function disconnect() {
+    setOperator(null);
+    setWalletError(null);
+  }
+
+  // follow account switches inside MetaMask (accountsChanged) so the desk
+  // always reflects the wallet that will actually sign
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.ethereum) return;
+    const onAccounts = (accounts: unknown) => {
+      const list = accounts as string[];
+      setOperator(list?.[0] ?? null);
+    };
+    window.ethereum.on?.("accountsChanged", onAccounts);
+    return () => {
+      // EIP-1193 providers expose removeListener (not in the TS type); call
+      // it defensively so switching accounts mid-session is always clean
+      (window.ethereum as unknown as { removeListener?: (e: string, cb: (a: string[]) => void) => void }).removeListener?.("accountsChanged", onAccounts);
+    };
+  }, []);
+
   // EIP-712 payload matching the backend's operator.js domain/types exactly.
   // chainId + verifyingContract come from the live /health endpoint — never
   // hardcoded.
@@ -284,13 +305,21 @@ export default function DashboardPage() {
               Refresh
             </Button>
             {operator ? (
-              <span
-                className="flex items-center gap-2 border-2 border-primary bg-primary/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-foreground"
-                title="Operator wallet — signs credential events (EIP-712)"
-              >
-                <Wallet className="h-3.5 w-3.5" />
-                {shortAddr(operator)}
-              </span>
+              <>
+                <span
+                  className="flex items-center gap-2 border-2 border-primary bg-primary/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-foreground"
+                  title="Connected wallet — the operator must be 0x197F…7eE5 to sign credential events"
+                >
+                  <Wallet className="h-3.5 w-3.5" />
+                  {shortAddr(operator)}
+                  {operator.toLowerCase() !== "0x197f2ed9c82c8a50ad9bddd849d16ce9afb17ee5" && (
+                    <span className="text-destructive">≠ operator</span>
+                  )}
+                </span>
+                <Button variant="outline" size="sm" onClick={disconnect} disabled={busy !== null}>
+                  Disconnect
+                </Button>
+              </>
             ) : (
               <Button variant="outline" size="sm" onClick={connect} disabled={busy !== null}>
                 <Wallet className="mr-1.5 h-3.5 w-3.5" />
@@ -439,8 +468,11 @@ export default function DashboardPage() {
                   Positions
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Freezing the borrower&apos;s A-Pass mid-term is the credential event: it calls the Cleanverse update_status endpoint, flips the on-chain gate, and triggers the rail&apos;s closeout. The event is EIP-712 signed by your connected wallet before the backend executes it.
+                  Freezing the borrower&apos;s A-Pass mid-term is the credential event: it calls the Cleanverse update_status endpoint, flips the on-chain gate, and triggers the rail&apos;s closeout. The event is EIP-712 signed by the operator wallet (0x197F…7eE5) — connect with that account in MetaMask, or the signature is rejected.
                 </CardDescription>
+                <p className="mono-label mt-2 text-muted-foreground">
+                  Order: open → freeze → closeout. Closeout on a healthy repo is refused by the contract (NoMarginCall) — freeze first.
+                </p>
                 {walletError && (
                   <p className="mt-2 text-[11px] font-semibold uppercase tracking-widest text-destructive">
                     {walletError}
