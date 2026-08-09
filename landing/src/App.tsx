@@ -19,21 +19,22 @@ function useHealth() {
 }
 
 function usePolicy() {
-  const [haircuts, setHaircuts] = useState<Record<string, string> | null>(null);
+  const [policy, setPolicy] = useState<{ haircuts: Record<string, string>; maintenanceMarginBps: number } | null>(null);
   useEffect(() => {
     api
       .policy()
-      .then((p) => setHaircuts(p.haircuts))
+      .then(setPolicy)
       .catch(() => {});
   }, []);
-  return haircuts;
+  return policy;
 }
 
 export default function App() {
   const { health, error } = useHealth();
-  const haircuts = usePolicy();
+  const policy = usePolicy();
 
-  const live = health?.mode === "sandbox";
+  const marginPct = policy ? (policy.maintenanceMarginBps / 100).toFixed(0) : null;
+  const deepCap = policy?.haircuts?.["3"] ?? null;
 
   return (
     <div className="min-h-screen">
@@ -120,8 +121,8 @@ export default function App() {
             {[
               ["Identity rail", "CVI"],
               ["Cash leg", "aUSDC"],
-              ["Margin", "105%"],
-              ["Cap", live ? "2%" : "tier-priced"],
+              ["Margin", marginPct ? `${marginPct}%` : "105%"],
+              ["Deep cap", deepCap ? deepCap : "tier-priced"],
             ].map(([k, v]) => (
               <div key={k} className="px-6 py-6">
                 <p className="mono-label text-bone/50">{k}</p>
@@ -205,7 +206,7 @@ export default function App() {
                 { tier: "TIER 20+", depth: "Standard verification", bucket: "2", fallback: "5% cap" },
                 { tier: "BASIC", depth: "Minimal verification", bucket: "1", fallback: "10% cap" },
               ].map((r) => {
-                const liveVal = haircuts?.[r.bucket];
+                const liveVal = policy?.haircuts?.[r.bucket];
                 return (
                   <div key={r.tier} className="grid grid-cols-2 border-b border-bone/25 px-5 py-5 last:border-b-0 md:grid-cols-4">
                     <span className="font-display text-xl font-bold uppercase tracking-tight">{r.tier}</span>
@@ -220,24 +221,38 @@ export default function App() {
                 );
               })}
             </div>
-            <p className="mono-label mt-4 text-bone/40">Maintenance margin 105% · enforced on-chain</p>
+            <p className="mono-label mt-4 text-bone/40">
+              Maintenance margin {marginPct ? `${marginPct}%` : "105%"} · enforced on-chain
+            </p>
           </div>
         </section>
 
         {/* closeout band */}
         <section className="bg-danger text-ink">
-          <div className="mx-auto grid max-w-6xl grid-cols-2 gap-px bg-ink/15 md:grid-cols-4">
-            {[
-              ["Obligation covered", "98.49%"],
-              ["Excess fail-closed", "15.1e9"],
-              ["Closeout reason", "borrower_2"],
-              ["Settlement", "defined"],
-            ].map(([k, v]) => (
-              <div key={k} className="px-6 py-8">
-                <p className="mono-label text-ink/70">{k}</p>
-                <p className="mt-1 font-display text-3xl font-bold uppercase tracking-tight">{v}</p>
-              </div>
-            ))}
+          <div className="mx-auto max-w-6xl px-6 py-14">
+            <div className="grid max-w-6xl grid-cols-2 gap-px bg-ink/15 md:grid-cols-4">
+              {[
+                ["Obligation covered", "98.49%"],
+                ["Excess fail-closed", "15.1e9"],
+                ["Closeout reason", "borrower_2"],
+                ["Settlement", "defined"],
+              ].map(([k, v]) => (
+                <div key={k} className="px-6 py-8">
+                  <p className="mono-label text-ink/70">{k}</p>
+                  <p className="mt-1 font-display text-3xl font-bold uppercase tracking-tight">{v}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mono-label mt-4 text-ink/70">
+              The reference settlement, settled on Monad testnet with real
+              A-Pass-verified parties. Closeout tx{" "}
+              <a
+                href="https://testnet.monadscan.xyz/tx/0x10241e21e819c65878db6f03e4f21d5f93d848ae941dafc147cd0ff5cabe59ae"
+                className="font-semibold underline decoration-2 underline-offset-4 focus-ring"
+              >
+                0x10241e21…59ae
+              </a>
+            </p>
           </div>
         </section>
 
