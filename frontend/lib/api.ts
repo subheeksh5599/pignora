@@ -32,11 +32,21 @@ export interface Repo {
   status: string;
   travelRule: string;
   createdAt: string;
+  onchain?: {
+    txHash: string;
+    cashToken?: string;
+    cashLabel?: string;
+    onchainRepoId?: number;
+  };
+  onchainError?: string;
   closeout?: {
     reason: string;
     executedAt: string;
     collateralToLender: string;
     escrowed: string;
+    txHash?: string;
+    onchain?: boolean;
+    onchainError?: string;
   };
 }
 

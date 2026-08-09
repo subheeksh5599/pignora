@@ -13,8 +13,8 @@ import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertTriangle, RefreshCw, ShieldCheck, ShieldOff } from "lucide-react";
 
-const TIER3 = "0x1111111111111111111111111111111111111111";
-const TIER2 = "0x2222222222222222222222222222222222222222";
+const BORROWER = "0x197F2ed9C82c8a50Ad9bddd849d16Ce9afb17eE5"; // deployer (relay key), tier 50, cv 1832
+const LENDER = "0x12D1275bE7C5961F12Bac967E0004Ba9B960930C"; // lender EOA, tier 50, cv 1833
 const ANON = "0x9999999999999999999999999999999999999999";
 
 function fmt(amount: string): string {
@@ -40,8 +40,8 @@ export default function DashboardPage() {
   const [lastEventTx, setLastEventTx] = useState<string | null>(null);
 
   // open-repo form
-  const [borrower, setBorrower] = useState(TIER3);
-  const [lender, setLender] = useState(TIER2);
+  const [borrower, setBorrower] = useState(BORROWER);
+  const [lender, setLender] = useState(LENDER);
   const [collateral, setCollateral] = useState("1000000000000");
   const [cash, setCash] = useState("950000000000"); // real tier-20 cap: 95%
   const [feeBps, setFeeBps] = useState("50");
@@ -62,7 +62,7 @@ export default function DashboardPage() {
   useEffect(() => {
     refresh();
     api
-      .identity(TIER3)
+      .identity(BORROWER)
       .then((id) => setIdentity(id))
       .catch(() => {});
      
@@ -287,8 +287,8 @@ export default function DashboardPage() {
                   <Select value={borrower} onValueChange={(v) => v && setBorrower(v)}>
                     <SelectTrigger className="font-mono text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={TIER3}>0x1111…</SelectItem>
-                      <SelectItem value={TIER2}>0x2222…</SelectItem>
+                      <SelectItem value={BORROWER}>0x197F…7eE5</SelectItem>
+                      <SelectItem value={LENDER}>0x12D1…930C</SelectItem>
                       <SelectItem value={ANON}>0x9999…</SelectItem>
                     </SelectContent>
                   </Select>
@@ -298,8 +298,8 @@ export default function DashboardPage() {
                   <Select value={lender} onValueChange={(v) => v && setLender(v)}>
                     <SelectTrigger className="font-mono text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={TIER2}>0x2222…</SelectItem>
-                      <SelectItem value={TIER3}>0x1111…</SelectItem>
+                      <SelectItem value={LENDER}>0x12D1…930C</SelectItem>
+                      <SelectItem value={BORROWER}>0x197F…7eE5</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -370,6 +370,7 @@ export default function DashboardPage() {
                   <TableHead className="mono-label text-right">Collateral</TableHead>
                   <TableHead className="mono-label text-right">Cash</TableHead>
                   <TableHead className="mono-label text-right">Cap</TableHead>
+                  <TableHead className="mono-label">Tx</TableHead>
                   <TableHead className="mono-label">Status</TableHead>
                   <TableHead className="mono-label text-right">Actions</TableHead>
                 </TableRow>
@@ -377,7 +378,7 @@ export default function DashboardPage() {
               <TableBody>
                 {repos.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="py-8 text-center font-display text-lg uppercase tracking-widest text-muted-foreground">
+                    <TableCell colSpan={9} className="py-8 text-center font-display text-lg uppercase tracking-widest text-muted-foreground">
                       No repos yet. Open one above.
                     </TableCell>
                   </TableRow>
@@ -390,6 +391,32 @@ export default function DashboardPage() {
                     <TableCell className="text-right font-mono text-xs">{fmt(r.collateralAmount)}</TableCell>
                     <TableCell className="text-right font-mono text-xs">{fmt(r.cashAmount)}</TableCell>
                     <TableCell className="text-right font-mono text-xs">{(r.haircutBps / 100).toFixed(1)}%</TableCell>
+                    <TableCell className="font-mono text-[10px] leading-4">
+                      {r.onchain?.txHash ? (
+                        <a
+                          href={`https://testnet.monadscan.xyz/tx/${r.onchain.txHash}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-foreground underline decoration-2 underline-offset-2 hover:text-muted-foreground focus-ring"
+                          title="repo open tx"
+                        >
+                          open {r.onchain.txHash.slice(0, 10)}…
+                        </a>
+                      ) : (
+                        <span className="text-muted-foreground/60">no on-chain</span>
+                      )}
+                      {r.closeout?.txHash && (
+                        <a
+                          href={`https://testnet.monadscan.xyz/tx/${r.closeout.txHash}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-1 block text-destructive underline decoration-2 underline-offset-2 hover:text-destructive/70 focus-ring"
+                          title="closeout tx"
+                        >
+                          close {r.closeout.txHash.slice(0, 10)}…
+                        </a>
+                      )}
+                    </TableCell>
                     <TableCell>
                       {r.status === "OPEN" ? (
                         <span className="bg-primary px-2 py-0.5 font-display text-[11px] font-bold uppercase tracking-widest text-primary-foreground">

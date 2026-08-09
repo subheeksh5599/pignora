@@ -14,6 +14,9 @@ export const config = {
   repoDesk: process.env.REPO_DESK_ADDRESS || "",
   identityRegistry: process.env.IDENTITY_REGISTRY_ADDRESS || "",
   relayKey: process.env.RELAY_KEY || "",
+  lenderKey: process.env.LENDER_KEY || "",
+  bond: process.env.BOND_ADDRESS || "",
+  mockUsd: process.env.MOCK_USD_ADDRESS || "",
   port: Number(process.env.PORT || 8787),
 };
 

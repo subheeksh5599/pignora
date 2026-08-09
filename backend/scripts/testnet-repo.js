@@ -16,8 +16,8 @@ import { loadABI } from "./abi.js";
 
 const RPC = config.monadRpc;
 const BORROWER_KEY = config.relayKey; // deployer key
-// fresh lender EOA (generated 2026-08-07) — canonical anvil addrs are contracts on Monad testnet
-const LENDER_KEY = "0x9bedbe5ce77258933a4435b8f70fffb3fd53b4d28af21cb85095f0b0a8259240";
+// fresh lender EOA (generated 2026-08-07) — key comes from env (LENDER_KEY), never committed
+const LENDER_KEY = process.env.LENDER_KEY || "";
 const BORROWER = "0x197F2ed9C82c8a50Ad9bddd849d16Ce9afb17eE5";
 const AUSDC = "0xfa96de5b8f434c26fdff953303dd66ff80af1026";
 const BOND = "0x13211b8f5983bfdcd2a14d8467631254c3af5a89";
