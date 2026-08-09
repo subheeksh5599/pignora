@@ -44,7 +44,7 @@ Every task, small or big, listed. Ticked only when genuinely fixed and tested. U
 - [x] RepoDesk + IdentityRegistry deployed to Monad testnet (IdentityRegistry 0xdcb88994..., RepoDesk 0x398D45F5..., deployer funded via faucet)
 - [x] Real repo settled on-chain with REAL A-Pass-verified parties (tier 50 both, cv 1832/1833): open at 2% lending cap (tx 0xb6fff6a9...), real freeze event (tx 0x7df33be6...), closeout (tx 0x10241e21...), lender 98.49% / borrower excess 15.1e9 escrowed — matches Foundry expectations
 - [x] Lending-cap model aligned to the REAL A-Pass tier scale (0-99: >=50 -> 2%, >=20 -> 5%, >=10 -> 8%) in contract + backend + tests
-- [ ] Real aUSDC cash leg in the testnet E2E — institution faucet pool was dry at demo time; real aUSDC delivery proven (tx 0x096cfcdf...); one-address swap when the pool refills
+- [ ] Real aUSDC cash leg in the testnet E2E — API faucet still down (TransferNotAllowed, team-acknowledged). Workaround per the dev group: query_deposit_address (added to the client) -> fund via faucet.circle.com (Monad Testnet) -> wallet receives AUSDC. Deposit wallet returned: 0x15fd89cf0356B547650e7F8Bab8e6DA2880f99bA; the faucet click itself is gated by reCAPTCHA (manual step) and the pool refill fixes the API route
 - [ ] Real Travel Rule PDF via download_travel_rule — endpoint verified live (TR_001 = needs a withdraw/A-Token-transfer tx; ours are deposits/status changes). Blocked on the aUSDC faucet pool refilling (withdraw needs funded A-Pass wallet)
 - [x] Submission email draft ready — docs/SUBMISSION-EMAIL.md (repo link, video slot, one-pager, deployed chains, CVI+CVA points)
 

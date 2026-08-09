@@ -166,6 +166,19 @@ class CleanverseClient {
     return json?.data?.items ?? [];
   }
 
+  /** query_deposit_address: get the deposit address for a token on a chain (used with the Circle testnet faucet for aUSDC). */
+  async queryDepositAddress({ chain = config.chain, symbol }) {
+    if (this.isMock()) return { mock: true, chain, symbol, depositAddress: null };
+    const res = await fetch(`${config.cooperateBase}/query_deposit_address`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "api-id": config.apiId },
+      body: JSON.stringify({ chain, symbol }),
+    });
+    const json = await res.json();
+    if (json.code !== "0000") throw new Error(`query_deposit_address ${symbol}: ${json.message}`);
+    return json.data;
+  }
+
   /** faucet: request test tokens (usdc/ausdc/usdt) to a deposit address. */
   async faucet({ chain = config.chain, symbol, depositAddress, amount = "5" }) {
     if (this.isMock()) return { mock: true, symbol, depositAddress, amount };
