@@ -101,7 +101,7 @@ app.get("/policy", (_req, res) => {
   res.json({
     haircuts: { 3: "2%", 2: "5%", 1: "10%" },
     maintenanceMarginBps: 10500,
-    note: "Identity tier prices the haircut: deeper verification, thinner haircut.",
+    note: "Identity tier prices the lending cap: deeper verification, higher cap.",
   });
 });
 

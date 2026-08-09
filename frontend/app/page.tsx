@@ -226,7 +226,7 @@ export default function App() {
             <div className="flex flex-wrap items-end justify-between gap-6">
               <h2 className="font-display text-4xl font-bold uppercase tracking-tight md:text-6xl">
                 More verification,<br />
-                <span className="serif-it lowercase text-signal">thinner haircut</span>
+                <span className="serif-it lowercase text-signal">thinner lending cap</span>
               </h2>
               <p className="max-w-sm text-sm leading-relaxed text-bone/60">
                 The lending cap is a function of the counterparty A-Pass tier,
@@ -252,7 +252,7 @@ export default function App() {
                     <span className="font-display text-xl font-bold uppercase tracking-tight">{r.tier}</span>
                     <span className="hidden text-xs text-bone/60 md:block">{r.depth}</span>
                     <span className="text-xs text-bone/60">
-                      {liveVal ? `haircut ${liveVal}` : r.fallback}
+                      {liveVal ? `lending cap ${liveVal}` : r.fallback}
                     </span>
                     <span className="mono-label hidden text-right text-bone/50 md:block">
                       {liveVal ? "live /policy" : "on-chain"}
