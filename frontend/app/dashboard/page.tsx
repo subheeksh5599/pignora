@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertTriangle, RefreshCw, ShieldCheck, ShieldOff, Wallet } from "lucide-react";
@@ -344,7 +344,9 @@ export default function DashboardPage() {
                 <div className="space-y-1.5">
                   <Label className="mono-label text-muted-foreground">Borrower</Label>
                   <Select value={borrower} onValueChange={(v) => v && setBorrower(v)}>
-                    <SelectTrigger className="font-mono text-xs"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="font-mono text-xs">
+                      <span className="truncate">{short(borrower)}</span>
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value={BORROWER}>0xf39F…2266</SelectItem>
                       <SelectItem value={LENDER}>0x7099…79C8</SelectItem>
@@ -355,7 +357,9 @@ export default function DashboardPage() {
                 <div className="space-y-1.5">
                   <Label className="mono-label text-muted-foreground">Lender</Label>
                   <Select value={lender} onValueChange={(v) => v && setLender(v)}>
-                    <SelectTrigger className="font-mono text-xs"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="font-mono text-xs">
+                      <span className="truncate">{short(lender)}</span>
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value={LENDER}>0x7099…79C8</SelectItem>
                       <SelectItem value={BORROWER}>0xf39F…2266</SelectItem>
