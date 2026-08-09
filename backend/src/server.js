@@ -211,29 +211,34 @@ app.get("/repos", async (_req, res) => {
       const txHashes = await repoTxHashes(chain);
       const stored = repoStore.list();
       const byId = new Map(stored.map((s) => [Number(s.id), s]));
-      const merged = chain.map((c) => {
-        const s = byId.get(c.id);
-        const txs = txHashes[c.id] ?? {};
-        return {
-          id: c.id,
-          borrower: c.borrower,
-          lender: c.lender,
-          collateralToken: c.collateralToken,
-          cashToken: c.cashToken,
-          collateralAmount: c.collateralAmount,
-          cashAmount: c.cashAmount,
-          feeBps: c.feeBps,
-          haircutBps: s?.haircutBps ?? 200,
-          tier: s?.tier ?? 50,
-          termDays: s?.termDays ?? Math.round((c.termEnd - Date.now() / 1000) / 86400),
-          status: c.closed ? "CLOSED_OUT" : "OPEN",
-          travelRule: s?.travelRule ?? `onchain-${c.id}`,
-          createdAt: s?.createdAt ?? new Date().toISOString(),
-          onchain: s?.onchain ?? { txHash: txs.openTxHash ?? ``, onchainRepoId: c.id, fromChain: true },
-          closeout: s?.closeout ?? (txs.closeTxHash ? { txHash: txs.closeTxHash, onchain: true } : undefined),
-          mode: "sandbox",
-        };
-      });
+      const merged = chain
+        .map((c) => {
+          const s = byId.get(c.id);
+          const txs = txHashes[c.id] ?? {};
+          return {
+            id: c.id,
+            borrower: c.borrower,
+            lender: c.lender,
+            collateralToken: c.collateralToken,
+            cashToken: c.cashToken,
+            collateralAmount: c.collateralAmount,
+            cashAmount: c.cashAmount,
+            feeBps: c.feeBps,
+            haircutBps: s?.haircutBps ?? 200,
+            tier: s?.tier ?? 50,
+            termDays: s?.termDays ?? Math.round((c.termEnd - Date.now() / 1000) / 86400),
+            status: c.closed ? "CLOSED_OUT" : "OPEN",
+            travelRule: s?.travelRule ?? `onchain-${c.id}`,
+            createdAt: s?.createdAt ?? new Date().toISOString(),
+            onchain: s?.onchain ?? { txHash: txs.openTxHash ?? ``, onchainRepoId: c.id, fromChain: true },
+            closeout: s?.closeout ?? (txs.closeTxHash ? { txHash: txs.closeTxHash, onchain: true } : undefined),
+            mode: "sandbox",
+          };
+        })
+        // only repos with a real on-chain open tx — pre-tracking artifacts
+        // (opened before tx recovery) have no hash and are excluded from the
+        // desk; every row shown has a MonadScan-verifiable open
+        .filter((r) => (r.onchain?.txHash ?? "") !== "");
       return res.json({ repos: merged, source: "chain" });
     } catch (e) {
       return res.status(502).json({ error: `chain read failed: ${e.message}` });

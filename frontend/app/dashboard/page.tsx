@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AlertTriangle, RefreshCw, ShieldCheck, ShieldOff, Wallet } from "lucide-react";
 import { ethers } from "ethers";
 import { connectWallet, signTypedData, shortAddr } from "@/lib/wallet";
-import { BOND_TOKEN, CASH_TOKEN, repoDeskWallet } from "@/lib/chain";
+import { BOND_TOKEN, CASH_TOKEN, REPO_DESK, repoDeskWallet, erc20Wallet } from "@/lib/chain";
 
 // Default parties come from env only (set on the deployed project). No
 // hardcoded wallet addresses anywhere — if unset, the operator types or
@@ -126,12 +126,18 @@ export default function DashboardPage() {
     setError(null);
     setWalletError(null);
     try {
-      // The connected wallet is the LENDER: it signs openRepo directly and
-      // its own cash gets escrowed. The backend still gates on identity.
+      // The connected wallet is the LENDER: it approves the RepoDesk to pull
+      // its cash, then signs openRepo directly. Its own cash gets escrowed.
       const provider = new ethers.BrowserProvider(window.ethereum!);
       const signer = await provider.getSigner();
+      const cashToken = erc20Wallet(CASH_TOKEN, signer);
+      const allowance = await cashToken.allowance(operator, REPO_DESK);
+      if (allowance < BigInt(cash)) {
+        const approveTx = await cashToken.approve(REPO_DESK, ethers.MaxUint256);
+        await approveTx.wait(); // MetaMask popup 1 — approve cash to the desk
+      }
       const desk = repoDeskWallet(signer);
-      const tx = await desk.openRepo(
+      const tx = await desk.openRepo( // MetaMask popup 2 — sign the open
         borrower,
         BOND_TOKEN,
         CASH_TOKEN,

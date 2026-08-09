@@ -91,3 +91,35 @@ export function repoDeskWallet(signer: ethers.Signer) {
     executeCloseout: (repoId: bigint) => desk.executeCloseout!(repoId),
   };
 }
+
+const ERC20_ABI = [
+  {
+    type: "function",
+    name: "approve",
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "allowance",
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" },
+    ],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+];
+
+/** Typed ERC20 driver for the cash token (approve + allowance). */
+export function erc20Wallet(token: string, signer: ethers.Signer) {
+  const c = new ethers.Contract(token, ERC20_ABI, signer);
+  return {
+    approve: (spender: string, amount: bigint) => c.approve!(spender, amount),
+    allowance: (owner: string, spender: string) => c.allowance!(owner, spender),
+  };
+}
