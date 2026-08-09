@@ -12,7 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/u
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertTriangle, RefreshCw, ShieldCheck, ShieldOff, Wallet } from "lucide-react";
+import { ethers } from "ethers";
 import { connectWallet, signTypedData, shortAddr } from "@/lib/wallet";
+import { BOND_TOKEN, CASH_TOKEN, repoDeskWallet } from "@/lib/chain";
 
 // Default demo parties come from env so the repo is clone-and-run with no
 // hardcoded addresses; fall back to the seeded local-chain accounts.
@@ -88,20 +90,55 @@ export default function DashboardPage() {
     }
   }
 
+  async function closeoutFromWallet(repoId: number, repoOnchainId: number | undefined) {
+    if (!operator) {
+      setWalletError("Connect your wallet first — the closeout is executed from your wallet");
+      return;
+    }
+    setBusy(`closeout-${repoId}`);
+    setError(null);
+    setWalletError(null);
+    try {
+      // executeCloseout is permissionless on RepoDesk ("anyone can execute"):
+      // the connected wallet submits the real transaction itself.
+      const provider = new ethers.BrowserProvider(window.ethereum!);
+      const signer = await provider.getSigner();
+      const desk = repoDeskWallet(signer);
+      const tx = await desk.executeCloseout(BigInt(repoOnchainId ?? repoId));
+      setLastEventTx(tx.hash);
+      await refresh();
+    } catch (e) {
+      setError(`wallet closeout failed: ${(e as Error).message}`);
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function openRepo() {
+    if (!operator) {
+      setWalletError("Connect your wallet first — you are the lender, the open is signed by your wallet");
+      return;
+    }
     setBusy("open");
     setError(null);
+    setWalletError(null);
     try {
-      await api.openRepo({
+      // The connected wallet is the LENDER: it signs openRepo directly and
+      // its own cash gets escrowed. The backend still gates on identity.
+      const provider = new ethers.BrowserProvider(window.ethereum!);
+      const signer = await provider.getSigner();
+      const desk = repoDeskWallet(signer);
+      const tx = await desk.openRepo(
         borrower,
-        lender,
-        collateralToken: "BOND",
-        cashToken: "aUSDC",
-        collateralAmount: collateral,
-        cashAmount: cash,
-        feeBps: Number(feeBps),
-        termDays: Number(termDays),
-      });
+        BOND_TOKEN,
+        CASH_TOKEN,
+        BigInt(collateral),
+        BigInt(cash),
+        BigInt(feeBps),
+        BigInt(termDays) * 86400n,
+        ethers.id(`tr-${Date.now()}-${borrower.slice(2, 10)}-${operator.slice(2, 10)}`)
+      );
+      setLastEventTx(tx.hash);
       await refresh();
     } catch (e) {
       setError((e as Error).message);
@@ -115,6 +152,13 @@ export default function DashboardPage() {
     try {
       const addr = await connectWallet();
       setOperator(addr);
+      // fund the connected wallet (testnet demo: gas + cash + collateral) so
+      // the wallet-signed open/closeout work with ANY wallet
+      try {
+        await api.fund(addr);
+      } catch (e) {
+        setWalletError(`wallet connected, but funding failed: ${(e as Error).message.slice(0, 80)}`);
+      }
     } catch (e) {
       setWalletError((e as Error).message);
     }
@@ -164,17 +208,8 @@ export default function DashboardPage() {
     }
   }
 
-  async function closeout(id: number) {
-    setBusy(`closeout-${id}`);
-    setError(null);
-    try {
-      await api.closeout(id);
-      await refresh();
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusy(null);
-    }
+  async function closeout(id: number, onchainId?: number) {
+    await closeoutFromWallet(id, onchainId);
   }
 
   async function showAudit(id: number) {
@@ -502,7 +537,7 @@ export default function DashboardPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => closeout(r.id)}
+                            onClick={() => closeout(r.id, r.onchain?.onchainRepoId)}
                             disabled={busy !== null}
                             className="font-display text-[11px] font-bold uppercase tracking-widest"
                           >

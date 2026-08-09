@@ -6,8 +6,9 @@ import { relay } from "./relay.js";
 import { haircutForTier, maxLend } from "./config.js";
 import { logAudit, readAudit, buildAuditPack } from "./audit.js";
 import { repoStore } from "./repoStore.js";
-import { isLive, openRepoOnchain, closeoutOnchain, listReposOnchain, repoTxHashes, registryProfile } from "./settlement.js";
+import { isLive, openRepoOnchain, closeoutOnchain, listReposOnchain, repoTxHashes, registryProfile, loadABI } from "./settlement.js";
 import { verifyCredentialEventSignature, credentialEventPayload, operatorAddress } from "./operator.js";
+import { JsonRpcProvider, Wallet, Contract, parseEther } from "ethers";
 
 const app = express();
 app.use(express.json());
@@ -174,6 +175,33 @@ app.get("/policy", (_req, res) => {
 });
 
 // ----------------------------------------------------------------- repos
+
+/** Fund the connected wallet with demo cash (CVA stand-in) + BOND collateral
+ *  so the desk's wallet-signed flow works with ANY wallet. Testnet mocks
+ *  only — never enabled against real assets. */
+app.post("/repos/fund", async (req, res) => {
+  const { address } = req.body;
+  if (!/^0x[0-9a-fA-F]{40}$/.test(address || "")) {
+    return res.status(400).json({ error: "address required" });
+  }
+  try {
+    const p = new JsonRpcProvider(config.monadRpc, config.monadChainId, { staticNetwork: true });
+    const relay = new Wallet(config.relayKey, p);
+    const usd = new Contract(config.mockUsd, loadABI("MockUSD"), relay);
+    const bond = new Contract(config.bond, loadABI("MockBond"), relay);
+    // fund gas first (0.5 MON), then cash + collateral
+    if ((await p.getBalance(address)) < parseEther("0.2")) {
+      await relay.sendTransaction({ to: address, value: parseEther("0.5") }).then((t) => t.wait());
+    }
+    const t1 = await usd.mint(address, 10_000_000_000_000n);
+    await t1.wait();
+    const t2 = await bond.mint(address, 5_000_000_000_000n);
+    await t2.wait();
+    res.json({ ok: true, gas: true, cashMint: t1.hash, bondMint: t2.hash });
+  } catch (e) {
+    res.status(500).json({ error: `fund failed: ${e.message.slice(0, 120)}` });
+  }
+});
 
 app.get("/repos", async (_req, res) => {
   if (isLive()) {

@@ -85,6 +85,11 @@ export const api = {
     }),
   policy: () => call<{ haircuts: Record<string, string>; maintenanceMarginBps: number; note: string }>("/policy"),
   repos: () => call<{ repos: Repo[] }>("/repos"),
+  fund: (address: string) =>
+    call<{ ok: boolean; cashMint?: string; bondMint?: string }>("/repos/fund", {
+      method: "POST",
+      body: JSON.stringify({ address }),
+    }),
   openRepo: (body: Record<string, unknown>) =>
     call<{ repo: Repo }>("/repos/open", { method: "POST", body: JSON.stringify(body) }),
   closeout: (id: number) => call<{ repo: Repo }>(`/repos/${id}/closeout`, { method: "POST" }),

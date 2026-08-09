@@ -14,6 +14,7 @@ import { relay } from "./relay.js";
 import { ABIS } from "./abis.js";
 
 const loadABI = (name) => ABIS[name];
+export { loadABI };
 
 const AUSDC = config.ausdc || "";
 const BOND = config.bond || "";
