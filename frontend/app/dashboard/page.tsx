@@ -159,7 +159,7 @@ export default function DashboardPage() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div>
             <a
-              href={process.env.NEXT_PUBLIC_LANDING_URL ?? "https://pignora-five.vercel.app"}
+              href="/"
               className="inline-block font-display text-2xl font-bold uppercase tracking-tight underline-offset-4 hover:underline focus-ring"
             >
               Pignora
@@ -422,7 +422,7 @@ export default function DashboardPage() {
 
         <footer className="flex items-center justify-center gap-4 pb-2 text-center mono-label text-muted-foreground">
           <a
-            href={process.env.NEXT_PUBLIC_LANDING_URL ?? "https://pignora-five.vercel.app"}
+            href="/"
             className="underline decoration-2 underline-offset-4 hover:text-foreground focus-ring"
           >
             Landing

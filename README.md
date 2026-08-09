@@ -10,8 +10,8 @@
 </p>
 
 <p align="center">
-  <a href="https://pignora-five.vercel.app">Landing</a> ·
-  <a href="https://pignora-desk.vercel.app">Live desk</a> ·
+  <a href="https://pignora-desk.vercel.app">Live app</a> ·
+  <a href="https://pignora-desk.vercel.app/dashboard">Desk</a> ·
   <a href="docs/ONE-PAGER.md">One-page summary</a> ·
   <a href="docs/demo-script.md">Demo script</a> ·
   <a href="https://testnet.monadscan.xyz/address/0x398D45F56F759Cd4b4cf0be07C2C4AADf7327edA">RepoDesk on MonadScan</a>
@@ -94,11 +94,8 @@ cd contracts && forge build && forge test
 # backend (live sandbox — add CLEANVERSE_API_ID / CLEANVERSE_API_KEY to .env)
 cd backend && cp .env.example .env && npm install && npm test && node src/server.js
 
-# frontend (desk)
-cd frontend && npm install && npm run dev  # :3000 -> /dashboard
-
-# landing (marketing site)
-cd landing && npm install && npm run dev   # :5173 (Vite) or `npm run build && npm run preview`
+# frontend (landing + desk in one app)
+cd frontend && npm install && npm run dev  # :3000 -> / (landing) and /dashboard (desk)
 
 # Monad testnet deploy (needs a funded PRIVATE_KEY)
 export PRIVATE_KEY=... && bash scripts/deploy-monad.sh
@@ -106,7 +103,7 @@ export PRIVATE_KEY=... && bash scripts/deploy-monad.sh
 
 ## Live deployment
 
-- Desk: https://pignora-desk.vercel.app (hosted, connects to the hosted API)
+- App (landing + desk): https://pignora-desk.vercel.app — `/` is the landing, `/dashboard` is the desk
 - API: https://backend-six-rho-86.vercel.app (`/health`, `/identity/:address`, `/repos`, `/repos/:id/audit`)
 - Contracts: Monad testnet (addresses above) — the "live demo URL or testnet deployment" submission item
 
@@ -115,8 +112,7 @@ export PRIVATE_KEY=... && bash scripts/deploy-monad.sh
 ```
 contracts/   Foundry — IdentityRegistry, RepoDesk, mocks, 22 tests, deploy script
 backend/     Node API — Cleanverse client (AES-CBC), relay, audit (JSONL + PDF), tests, E2E scripts
-frontend/    Next.js treasury desk (shadcn/ui, live API reads)
-landing/     Vite + React marketing site (hero video, live policy/health)
+frontend/    Next.js — landing page (/) + treasury desk (/dashboard) on shadcn/ui, live API reads
 scripts/     deploy-monad.sh (one-command testnet pipeline)
 docs/        one-pager, demo script, application copy, screenshots
 ```

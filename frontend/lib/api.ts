@@ -58,14 +58,22 @@ async function call<T>(path: string, opts: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
-  health: () => call<{ ok: boolean; mode: string }>("/health"),
+  health: () =>
+    call<{
+      ok: boolean;
+      mode: string;
+      chain: string;
+      monad: { chainId: number; rpc: string };
+      contracts: { repoDesk: string | null; registry: string | null };
+      cleanverse: string;
+    }>("/health"),
   identity: (address: string) => call<Identity>(`/identity/${address}`),
   setStatus: (address: string, status: IdentityStatus, tier?: number) =>
     call<{ ok: boolean }>(`/identity/${address}/status`, {
       method: "POST",
       body: JSON.stringify({ status, tier }),
     }),
-  policy: () => call<{ haircuts: Record<string, string> }>("/policy"),
+  policy: () => call<{ haircuts: Record<string, string>; maintenanceMarginBps: number; note: string }>("/policy"),
   repos: () => call<{ repos: Repo[] }>("/repos"),
   openRepo: (body: Record<string, unknown>) =>
     call<{ repo: Repo }>("/repos/open", { method: "POST", body: JSON.stringify(body) }),
