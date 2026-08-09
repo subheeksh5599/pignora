@@ -1,15 +1,23 @@
 @import "tailwindcss";
-@import "@fontsource-variable/inter";
-@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource-variable/oswald";
+@import "@fontsource/instrument-serif/400.css";
+@import "@fontsource/instrument-serif/400-italic.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/600.css";
 
 @theme {
-  --color-surface: #f8f8f8;
+  --color-bone: #edeae3;
+  --color-bone-deep: #e2ded3;
   --color-ink: #0a0a0a;
-  --color-muted: #6b6b6b;
-  --color-line: #e5e5e5;
-  --color-accent: #2c5f4d;
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --color-muted: #5a5a5a;
+  --color-signal: #d9ff00;
+  --color-danger: #ff4d00;
+  --color-pitch: #0b1a0e;
+  --color-line: rgba(10, 10, 10, 0.14);
+  --font-display: "Oswald Variable", "Arial Narrow", sans-serif;
+  --font-serif: "Instrument Serif", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
 
 html {
@@ -17,28 +25,46 @@ html {
 }
 
 body {
-  background: #ffffff;
+  background: var(--color-bone);
   color: var(--color-ink);
-  font-family: var(--font-sans);
+  font-family: var(--font-mono);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
+/* film grain over everything */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  pointer-events: none;
+  opacity: 0.07;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+}
+
 ::selection {
-  background: var(--color-accent);
-  color: #ffffff;
+  background: var(--color-ink);
+  color: var(--color-signal);
 }
 
 .mono-label {
   font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
+.serif-it {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+}
+
 .focus-ring:focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-signal);
   outline-offset: 3px;
 }
 
@@ -47,10 +73,10 @@ body {
   left: -9999px;
   top: 0;
   background: var(--color-ink);
-  color: #fff;
+  color: var(--color-signal);
   padding: 0.75rem 1.25rem;
   font-size: 13px;
-  z-index: 100;
+  z-index: 1000;
 }
 .skip-to-content:focus {
   left: 0;
