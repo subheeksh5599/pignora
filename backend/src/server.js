@@ -7,6 +7,7 @@ import { haircutForTier, maxLend } from "./config.js";
 import { logAudit, readAudit, buildAuditPack } from "./audit.js";
 import { repoStore } from "./repoStore.js";
 import { isLive, openRepoOnchain, closeoutOnchain, listReposOnchain, repoTxHashes, registryProfile } from "./settlement.js";
+import { verifyCredentialEventSignature, credentialEventPayload, operatorAddress } from "./operator.js";
 
 const app = express();
 app.use(express.json());
@@ -86,11 +87,34 @@ app.get("/identity/:address", async (req, res) => {
 });
 
 // Credential-event channel (demo/ops tool): revoke, freeze, expire, reactivate.
+// A credential event is authorized by an EIP-712 signature from the operator
+// wallet (MetaMask on the desk) — the backend verifies it before executing,
+// so no action can be spoofed by a random caller.
 app.post("/identity/:address/status", async (req, res) => {
-  const { status, tier, expiry } = req.body;
+  const STATUS_CODE_INVERSE = { ACTIVE: 1, FROZEN: 2, REVOKED: 3, EXPIRED: 4, UNVERIFIED: 0 };
+  const { status, tier, expiry, signature, nonce, timestamp } = req.body;
   if (!status) return res.status(400).json({ error: "status required (ACTIVE|FROZEN|REVOKED|EXPIRED|UNVERIFIED)" });
+  if (!signature) return res.status(401).json({ error: "credential events must be signed by the operator wallet (MetaMask)" });
+
+  // verify the EIP-712 signature before touching any state
+  let signer;
+  try {
+    const ts = timestamp ?? Math.floor(Date.now() / 1000);
+    const nonceVal = nonce ?? 0;
+    signer = verifyCredentialEventSignature({
+      subject: req.params.address,
+      status: STATUS_CODE_INVERSE[status] ?? 1,
+      tier: Number(tier ?? 0),
+      nonce: nonceVal,
+      timestamp: ts,
+      signature,
+    });
+  } catch (e) {
+    return res.status(401).json({ error: `signature verification failed: ${e.message}` });
+  }
+
   const updated = await relay.setProfile(req.params.address, { status, tier, expiry }, "manual");
-  logAudit({ type: "credential_event", repoId: null, address: req.params.address, status, tier });
+  logAudit({ type: "credential_event", repoId: null, address: req.params.address, status, tier, signer });
 
   // A credential event is a protocol event: a frozen/revoked/expired borrower's
   // open repos close out automatically (the on-chain gate flips -> closeout).

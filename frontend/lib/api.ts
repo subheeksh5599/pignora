@@ -78,10 +78,10 @@ export const api = {
       cleanverse: string;
     }>("/health"),
   identity: (address: string) => call<Identity>(`/identity/${address}`),
-  setStatus: (address: string, status: IdentityStatus, tier?: number) =>
-    call<{ ok: boolean; cleanverse?: { data?: { txHash?: string } } }>(`/identity/${address}/status`, {
+  setStatus: (address: string, status: IdentityStatus, tier?: number, auth?: { signature: string; nonce: number; timestamp: number }) =>
+    call<{ ok: boolean; cleanverse?: { data?: { txHash?: string } }; closedOutTx?: { txHash?: string }[] }>(`/identity/${address}/status`, {
       method: "POST",
-      body: JSON.stringify({ status, tier }),
+      body: JSON.stringify({ status, tier, ...(auth ?? {}) }),
     }),
   policy: () => call<{ haircuts: Record<string, string>; maintenanceMarginBps: number; note: string }>("/policy"),
   repos: () => call<{ repos: Repo[] }>("/repos"),

@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertTriangle, RefreshCw, ShieldCheck, ShieldOff } from "lucide-react";
+import { AlertTriangle, RefreshCw, ShieldCheck, ShieldOff, Wallet } from "lucide-react";
+import { connectWallet, signTypedData, shortAddr } from "@/lib/wallet";
 
 // Default demo parties come from env so the repo is clone-and-run with no
 // hardcoded addresses; fall back to the seeded local-chain accounts.
@@ -41,6 +42,8 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [lastEventTx, setLastEventTx] = useState<string | null>(null);
+  const [operator, setOperator] = useState<string | null>(null);
+  const [walletError, setWalletError] = useState<string | null>(null);
 
   // open-repo form
   const [borrower, setBorrower] = useState(BORROWER);
@@ -107,13 +110,52 @@ export default function DashboardPage() {
     }
   }
 
+  async function connect() {
+    setWalletError(null);
+    try {
+      const addr = await connectWallet();
+      setOperator(addr);
+    } catch (e) {
+      setWalletError((e as Error).message);
+    }
+  }
+
+  // EIP-712 payload matching the backend's operator.js domain/types exactly.
+  function credentialEventPayload(subject: string, status: number, tier: number, nonce: number, timestamp: number) {
+    return {
+      domain: { name: "Pignora", version: "1", chainId: 10143, verifyingContract: "0x398D45F56F759Cd4b4cf0be07C2C4AADf7327edA" },
+      types: {
+        CredentialEvent: [
+          { name: "subject", type: "address" },
+          { name: "status", type: "uint8" },
+          { name: "tier", type: "uint8" },
+          { name: "nonce", type: "uint256" },
+          { name: "timestamp", type: "uint256" },
+        ],
+      },
+      primaryType: "CredentialEvent",
+      message: { subject, status, tier, nonce, timestamp },
+    };
+  }
+
   async function revokeBorrower() {
+    if (!operator) {
+      setWalletError("Connect your wallet first — credential events are signed by the operator");
+      return;
+    }
     setBusy("revoke");
     setError(null);
+    setWalletError(null);
     try {
-      // sandbox: FROZEN maps to the REAL Cleanverse update_status credential event
-      const res = await api.setStatus(borrower, "FROZEN", 3);
-      setLastEventTx(res.cleanverse?.data?.txHash ?? null);
+      // The credential event is EIP-712 signed by the operator wallet
+      // (MetaMask), verified by the backend before execution.
+      const statusCode = 2; // FROZEN
+      const tierCode = Number(identity?.tier ?? 50);
+      const ts = Math.floor(Date.now() / 1000);
+      const payload = credentialEventPayload(borrower, statusCode, tierCode, ts, ts);
+      const signature = await signTypedData(operator, payload);
+      const res = await api.setStatus(borrower, "FROZEN", tierCode, { signature, nonce: ts, timestamp: ts });
+      setLastEventTx(res.cleanverse?.data?.txHash ?? res.closedOutTx?.[0]?.txHash ?? null);
       await refresh();
     } catch (e) {
       setError((e as Error).message);
@@ -193,6 +235,20 @@ export default function DashboardPage() {
               <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${busy ? "animate-spin" : ""}`} />
               Refresh
             </Button>
+            {operator ? (
+              <span
+                className="flex items-center gap-2 border-2 border-primary bg-primary/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-foreground"
+                title="Operator wallet — signs credential events (EIP-712)"
+              >
+                <Wallet className="h-3.5 w-3.5" />
+                {shortAddr(operator)}
+              </span>
+            ) : (
+              <Button variant="outline" size="sm" onClick={connect} disabled={busy !== null}>
+                <Wallet className="mr-1.5 h-3.5 w-3.5" />
+                Connect wallet
+              </Button>
+            )}
           </div>
         </div>
       </header>
@@ -338,8 +394,13 @@ export default function DashboardPage() {
                   Positions
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Freezing the borrower&apos;s A-Pass mid-term is the credential event: it calls the Cleanverse update_status endpoint, flips the on-chain gate, and triggers the rail&apos;s closeout.
+                  Freezing the borrower&apos;s A-Pass mid-term is the credential event: it calls the Cleanverse update_status endpoint, flips the on-chain gate, and triggers the rail&apos;s closeout. The event is EIP-712 signed by your connected wallet before the backend executes it.
                 </CardDescription>
+                {walletError && (
+                  <p className="mt-2 text-[11px] font-semibold uppercase tracking-widest text-destructive">
+                    {walletError}
+                  </p>
+                )}
                 {lastEventTx && (
                   <a
                     href={`https://testnet.monadscan.xyz/tx/${lastEventTx}`}
