@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertTriangle, RefreshCw, ShieldCheck, ShieldOff, Wallet } from "lucide-react";
@@ -16,12 +15,11 @@ import { ethers } from "ethers";
 import { connectWallet, signTypedData, shortAddr } from "@/lib/wallet";
 import { BOND_TOKEN, CASH_TOKEN, repoDeskWallet } from "@/lib/chain";
 
-// Default demo parties come from env so the repo is clone-and-run with no
-// hardcoded addresses; fall back to the seeded local-chain accounts.
-// (anvil #0 = tier 50 borrower, anvil #1 = tier 20 lender)
-const BORROWER = process.env.NEXT_PUBLIC_DEFAULT_BORROWER || "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
-const LENDER = process.env.NEXT_PUBLIC_DEFAULT_LENDER || "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
-const ANON = "0x9999999999999999999999999999999999999999";
+// Default parties come from env only (set on the deployed project). No
+// hardcoded wallet addresses anywhere — if unset, the operator types or
+// pastes any wallet; the identity panel verifies any address.
+const BORROWER = process.env.NEXT_PUBLIC_DEFAULT_BORROWER || "";
+const LENDER = process.env.NEXT_PUBLIC_DEFAULT_LENDER || "";
 
 function fmt(amount: string): string {
   return (Number(amount) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 2 });
@@ -46,6 +44,8 @@ export default function DashboardPage() {
   const [lastEventTx, setLastEventTx] = useState<string | null>(null);
   const [operator, setOperator] = useState<string | null>(null);
   const [walletError, setWalletError] = useState<string | null>(null);
+  const [chainId, setChainId] = useState<number | null>(null);
+  const [repoDeskAddr, setRepoDeskAddr] = useState<string | null>(null);
 
   // open-repo form
   const [borrower, setBorrower] = useState(BORROWER);
@@ -60,6 +60,8 @@ export default function DashboardPage() {
       const [h, r] = await Promise.all([api.health(), api.repos()]);
       setMode(h.mode);
       setRepos(r.repos);
+      setChainId(h.monad?.chainId ?? null);
+      setRepoDeskAddr(h.contracts?.repoDesk ?? null);
       setError(null);
     } catch (e) {
       setError(`backend unreachable: ${(e as Error).message}`);
@@ -69,11 +71,12 @@ export default function DashboardPage() {
   // auto-verify the default counterparty on load (real sandbox identity)
   useEffect(() => {
     refresh();
-    api
-      .identity(BORROWER)
-      .then((id) => setIdentity(id))
-      .catch(() => {});
-     
+    if (BORROWER) {
+      api
+        .identity(BORROWER)
+        .then((id) => setIdentity(id))
+        .catch(() => {});
+    }
   }, [refresh]);
 
   async function checkIdentity() {
@@ -165,9 +168,12 @@ export default function DashboardPage() {
   }
 
   // EIP-712 payload matching the backend's operator.js domain/types exactly.
+  // chainId + verifyingContract come from the live /health endpoint — never
+  // hardcoded.
   function credentialEventPayload(subject: string, status: number, tier: number, nonce: number, timestamp: number) {
+    if (!chainId || !repoDeskAddr) throw new Error("chain info not loaded yet — refresh");
     return {
-      domain: { name: "Pignora", version: "1", chainId: 10143, verifyingContract: "0x398D45F56F759Cd4b4cf0be07C2C4AADf7327edA" },
+      domain: { name: "Pignora", version: "1", chainId, verifyingContract: repoDeskAddr },
       types: {
         CredentialEvent: [
           { name: "subject", type: "address" },
@@ -378,35 +384,28 @@ export default function DashboardPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label className="mono-label text-muted-foreground">Borrower</Label>
-                  <Select value={borrower} onValueChange={(v) => v && setBorrower(v)}>
-                    <SelectTrigger className="font-mono text-xs">
-                      <span className="truncate">{short(borrower)}</span>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={BORROWER}>0xf39F…2266</SelectItem>
-                      <SelectItem value={LENDER}>0x7099…79C8</SelectItem>
-                      <SelectItem value={ANON}>0x9999…</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    value={borrower}
+                    onChange={(e) => setBorrower(e.target.value)}
+                    placeholder="0x… (any wallet)"
+                    className="font-mono text-xs"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="mono-label text-muted-foreground">Lender</Label>
-                  <Select value={lender} onValueChange={(v) => v && setLender(v)}>
-                    <SelectTrigger className="font-mono text-xs">
-                      <span className="truncate">{short(lender)}</span>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={LENDER}>0x7099…79C8</SelectItem>
-                      <SelectItem value={BORROWER}>0xf39F…2266</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    value={lender}
+                    onChange={(e) => setLender(e.target.value)}
+                    placeholder="0x… (any wallet)"
+                    className="font-mono text-xs"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="mono-label text-muted-foreground">Collateral (BOND, units)</Label>
                   <Input value={collateral} onChange={(e) => setCollateral(e.target.value)} className="font-mono text-xs" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="mono-label text-muted-foreground">Cash (aUSDC, micro-units)</Label>
+                  <Label className="mono-label text-muted-foreground">Cash (USD CVA, micro-units)</Label>
                   <Input value={cash} onChange={(e) => setCash(e.target.value)} className="font-mono text-xs" />
                 </div>
                 <div className="space-y-1.5">

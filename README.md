@@ -141,10 +141,18 @@ fail-closed to escrow. The closeout lands in the same click as the event.
 
 Credential events are EIP-712 signed by the operator wallet (MetaMask, via
 the desk's "Connect wallet" button) before the backend executes them. The
-signature domain binds to the RepoDesk contract on Monad testnet (chain
-10143), so a freeze cannot be spoofed by a random caller — the backend
-verifies the recovered signer against the operator key and records it in
-the audit log.
+signature domain binds to the RepoDesk contract and chain reported by the
+live `/health` endpoint (never hardcoded), so a freeze cannot be spoofed by
+a random caller — the backend verifies the recovered signer against the
+operator key and records it in the audit log.
+
+The repo lifecycle is wallet-native too: the connected MetaMask wallet is
+the LENDER — it signs `openRepo` directly on RepoDesk (its own cash is
+escrowed) and calls `executeCloseout` directly (permissionless on the
+contract). The backend only verifies identity and provisions the wallet on
+connect (`/repos/fund`: testnet gas + cash + collateral, real mints). No
+hardcoded wallets anywhere — the borrower/lender fields accept any address
+and the desk defaults come from environment variables only.
 
 ## Transactions — the evidence
 
@@ -205,6 +213,8 @@ sequenceDiagram
 | Repo settled on-chain with real A-Pass-verified parties | ✅ Real (open → freeze → closeout, tx hashes above) |
 | Credential event auto-closes open repos | ✅ Real (verified in the live walk) |
 | Desk reads live identity / policy / health | ✅ Real (deployed API, sandbox mode) |
+| Repo lifecycle wallet-signed (open/closeout from the connected MetaMask) | ✅ Real (openRepo + executeCloseout are msg.sender / permissionless) |
+| No hardcoded wallets — any address accepted, defaults env-driven | ✅ Real (borrower/lender are free-form inputs; env only) |
 | Cleanverse identity rail (CVI) | ✅ Real (query_apass + update_status) |
 | Settlement cash token | ✅ Real on-chain (USD-pegged CVA stand-in; the aUSDC A-Token transfer gate needs vault registration, pending) |
 | Real aUSDC cash leg with a fresh Circle deposit | ⏳ Pending — vault registration (`registerApass`) + deposit re-provisioning with the team |

@@ -1,15 +1,15 @@
 # Pignora — Demo video storyboard (shot-by-shot)
 
-Record at 1080p, screen + voiceover. Total ~110 seconds. No music, no cuts
+Record at 1080p, screen + voiceover. Total ~115 seconds. No music, no cuts
 longer than 2s. Every number on screen is REAL (all txs land on Monad
 testnet, chain 10143, and every repo row links to MonadScan).
 
 NARRATIVE: this video proves the two claims NO other project on the board can
 make: (1) Pignora runs the actual institutional instrument — repo — and
 (2) when a credential dies mid-term, the position CLOSES with a defined
-settlement (fail-closed escrow), it does not freeze-and-hope. Every click
-fires a REAL on-chain transaction, and the credential event is signed by the
-operator wallet (MetaMask) before the backend executes it.
+settlement (fail-closed escrow), it does not freeze-and-hope. Every action
+is signed by the operator's MetaMask wallet — open, closeout, and the
+credential event all come from a real wallet, not the backend.
 
 ## SHOT 1 — Hook (0-8s)
 SCREEN: white text on dark — "$4T a day moves through repo desks in TradFi.
@@ -26,38 +26,41 @@ A-Pass is real — queried live, tier 50, cv record 1832. The lending cap is
 priced by that tier: more verification, higher cap. An unverified wallet
 cannot open a repo at all."
 
-## SHOT 3 — Open the repo (25-55s)
-SCREEN: Open-repo form is PRE-FILLED with the real parties (borrower
-0x197F…7eE5, lender 0x12D1…930C), collateral 1,000,000,000,000 BOND units,
-cash 950,000,000,000, fee 50 bps, term 7 days → click "Open repo" →
-WAIT ~30s (real tx mining) → the row appears: status OPEN, cap 2.0%, and a
-tx link "open 0x…" (linked to MonadScan).
-VOICE: "We open a seven-day repo: the borrower pledges a tokenized bond
-against the cash leg. The contract escrows both legs on-chain and enforces
-the 105% maintenance margin. This open itself is a transaction — you can see
-the hash on the row, linked to MonadScan."
+## SHOT 3 — Connect the wallet (25-40s)
+SCREEN: header → click "Connect wallet" → MetaMask popup → approve → the
+header shows the connected wallet (0x…). The backend funds it automatically
+on connect: real mints of testnet MON gas, cash, and bond collateral.
+VOICE: "I connect my wallet. The desk provisions it on the testnet — gas,
+cash, and collateral, all real transactions — so the repo lifecycle runs
+from MY wallet, not a backend key."
 
-## SHOT 4 — Connect the operator wallet (55-70s)
-SCREEN: header → click "Connect wallet" → MetaMask popup appears → approve →
-header now shows the connected wallet (0x…).
-VOICE: "Credential events are signed by the operator wallet. I connect — the
-desk asks MetaMask for the account. Every freeze from here is authorized by
-a signature from this wallet, bound to the Pignora contract and this chain."
+## SHOT 4 — Open the repo, wallet-signed (40-70s)
+SCREEN: Open-repo form: borrower 0x197F…7eE5 (the A-Pass holder), collateral
+1,000,000,000,000 BOND units, cash 950,000,000,000, fee 50 bps, term 7 days
+→ click "Open repo" → MetaMask shows the RepoDesk.openRepo transaction →
+approve → WAIT ~30s (real tx mining) → the row appears: status OPEN, cap
+2.0%, and a tx link "open 0x…" (linked to MonadScan).
+VOICE: "I open a seven-day repo against the tier-50 borrower. MetaMask is
+asking me to sign the openRepo call — I am the lender, my wallet's cash gets
+escrowed on-chain, and the 105% maintenance margin is enforced by the
+contract. The open is a real transaction from my wallet, hash on the row,
+linked to MonadScan."
 
 ## SHOT 5 — THE MOMENT: signed credential freeze (70-90s)
 SCREEN: click "Freeze borrower credential" → MetaMask shows the EIP-712
-signature request (domain: Pignora, the RepoDesk contract, chain 10143:
-CredentialEvent subject/status/tier/nonce/timestamp) → click Sign → in the
-same moment: the identity panel flips to REJECTED, the repo row flips to
-CLOSED OUT, and a red "close 0x…" tx link appears on the row. The freeze
-fires TWO real txs: the Cleanverse update_status event and the on-chain
-IdentityRegistry gate flip, then the auto-closeout executes on RepoDesk.
+signature request (domain: Pignora, the RepoDesk contract from the live
+health endpoint: CredentialEvent subject/status/tier/nonce/timestamp) →
+click Sign → in the same moment: the identity panel flips to REJECTED, the
+repo row flips to CLOSED OUT, and a red "close 0x…" tx link appears. The
+freeze fires TWO real txs: the Cleanverse update_status event and the
+on-chain IdentityRegistry gate flip, then the auto-closeout executes on
+RepoDesk.
 VOICE: "Mid-term, the borrower's A-Pass is frozen. MetaMask is asking me to
 sign the credential event — EIP-712 typed data, bound to the RepoDesk
-contract on chain 10143. I sign, and the backend verifies the signature
-before it executes anything. The gate flips, the closeout runs automatically
-— no manual close. This is not a freeze-and-hope protocol: the repo closes
-out, on-chain, in the same moment as the event."
+contract and this chain, reported live by the API. I sign, and the backend
+verifies my signature before it executes anything. The gate flips, the
+closeout runs automatically — no manual close. Not freeze-and-hope: the
+repo closes out, on-chain, in the same moment as the event."
 
 ## SHOT 6 — The settlement nobody else has (90-100s)
 SCREEN: Repo row → status CLOSED OUT, reason borrower_2 (the credential
@@ -86,14 +89,14 @@ When trust changes, the trade closes, on defined terms. Pignora."
 - Desk open at https://pignora-desk.vercel.app/dashboard, backend badge
   shows "sandbox" (not "mock")
 - MetaMask installed and on Monad testnet (chain 10143) — the signature
-  domain is chain-bound, so the wrong network breaks the freeze
+  domain is chain-bound, so the wrong network breaks the flow
 - MetaMask must hold the OPERATOR key (the RELAY_KEY wallet 0x197F…7eE5).
   Import the private key into MetaMask before recording; the desk requires
-  signatures from exactly this wallet
+  signatures from exactly this wallet for the credential event, and the
+  wallet must be funded (auto-funded on connect — real mints)
 - Borrower 0x197F2ed9C82c8a50Ad9bddd849d16Ce9afb17eE5 is ACTIVE (identity
   panel auto-verifies VERIFIED, tier 50, cap 2.0%). If it shows REJECTED,
-  reactivate WITH a signature (the same EIP-712 flow the desk uses) or via
-  the desk's own wallet-signed call
+  reactivate via the desk's wallet-signed call
 - The positions table shows earlier on-chain repos with real hashes — that
   is real contract history, leave it on screen (it proves live data)
 - Open takes ~30s (real tx mining) — do NOT double-click; wait for the row
