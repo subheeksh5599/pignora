@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, type Health } from "./lib/api";
 
 const DESK_URL = "https://pignora-desk.vercel.app";
@@ -32,6 +32,36 @@ function usePolicy() {
 export default function App() {
   const { health, error } = useHealth();
   const policy = usePolicy();
+  const [activeStep, setActiveStep] = useState(0);
+
+  // Auto-advance the mechanism pipeline once it scrolls into view; pause
+  // off-screen and respect reduced motion.
+  const mechanismRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const el = mechanismRef.current;
+    if (!el) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      setActiveStep(3);
+      return;
+    }
+    let timer: ReturnType<typeof setInterval> | null = null;
+    let started = false;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !started) {
+          started = true;
+          timer = setInterval(() => setActiveStep((s) => (s < 3 ? s + 1 : 3)), 1400);
+        }
+      },
+      { threshold: 0.35 }
+    );
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      if (timer) clearInterval(timer);
+    };
+  }, []);
 
   const marginPct = policy ? (policy.maintenanceMarginBps / 100).toFixed(0) : null;
   const deepCap = policy?.haircuts?.["3"] ?? null;
@@ -62,7 +92,7 @@ export default function App() {
       </header>
 
       <main id="main">
-        {/* hero with video */}
+        {/* hero */}
         <section id="top" className="mx-auto max-w-6xl px-6 pt-14 md:pt-20">
           <div className="flex flex-wrap items-center gap-3">
             <span className="flex items-center gap-2 bg-signal px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-ink">
@@ -98,21 +128,6 @@ export default function App() {
               Verify live state
             </a>
           </div>
-
-          {/* hero video: the real desk, in motion */}
-          <div className="mt-12 border-2 border-ink bg-ink">
-            <video
-              className="aspect-video w-full object-cover"
-              autoPlay
-              muted
-              loop
-              playsInline
-              poster="/video/hero-poster.jpg"
-              aria-label="The Pignora desk: identity gate, repo open, credential freeze, closeout"
-            >
-              <source src="/video/hero.mp4" type="video/mp4" />
-            </video>
-          </div>
         </section>
 
         {/* stat band */}
@@ -135,7 +150,7 @@ export default function App() {
         </section>
 
         {/* mechanism */}
-        <section id="mechanism" className="mx-auto max-w-6xl px-6 py-20 md:py-28">
+        <section id="mechanism" ref={mechanismRef} className="mx-auto max-w-6xl px-6 py-20 md:py-28">
           <div className="flex flex-wrap items-end justify-between gap-6">
             <h2 className="font-display text-4xl font-bold uppercase tracking-tight md:text-6xl">
               Four moves,<br />
@@ -148,36 +163,44 @@ export default function App() {
             </p>
           </div>
 
-          <ol className="mt-14 grid gap-px border-2 border-ink bg-ink md:grid-cols-4">
-            {[
-              {
-                n: "01",
-                title: "Verify",
-                body: "Cleanverse A-Pass check on both counterparties before a repo can open. Unverified wallets cannot borrow.",
-              },
-              {
-                n: "02",
-                title: "Price",
-                body: "The tier sets the lending cap: tier 50+ at 2%, tier 20+ at 5%, the rest at 10%.",
-              },
-              {
-                n: "03",
-                title: "Escrow",
-                body: "Collateral and the aUSDC cash leg lock in the RepoDesk until repayment, 105% margin on-chain.",
-              },
-              {
-                n: "04",
-                title: "Close",
-                body: "A freeze, revocation, or expiry mid-term flips the gate and settles the repo in defined numbers.",
-              },
-            ].map((s) => (
-              <li key={s.n} className="bg-bone p-6">
-                <span className="font-display text-5xl font-bold uppercase text-ink/20">{s.n}</span>
-                <h3 className="mt-4 font-display text-2xl font-bold uppercase tracking-tight">{s.title}</h3>
-                <p className="mt-3 text-xs leading-relaxed text-muted">{s.body}</p>
-              </li>
-            ))}
-          </ol>
+          {/* mechanism: animated pipeline */}
+          <div className="mt-12 border-2 border-ink bg-ink p-1.5">
+            <div className="bg-bone p-6 md:p-8">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className="mono-label text-muted">Credential event</span>
+                <span className="mono-label text-muted">Mid-term</span>
+                <span className="mono-label text-muted">On-chain settlement</span>
+              </div>
+              <div className="mt-6">
+                <div className="grid grid-cols-4 gap-1 md:gap-2">
+                  {[
+                    { label: "Verify", sub: "A-Pass gate" },
+                    { label: "Price", sub: "tier cap" },
+                    { label: "Escrow", sub: "both legs" },
+                    { label: "Close", sub: "fail-closed" },
+                  ].map((s, i) => (
+                    <div key={s.label} className={`step-cell ${i === activeStep ? "step-on" : ""} ${i < activeStep ? "step-done" : ""}`}>
+                      <span className="font-display text-xs font-bold uppercase tracking-widest text-ink/40">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span className="mt-1 block font-display text-lg font-bold uppercase leading-none tracking-tight md:text-2xl">
+                        {s.label}
+                      </span>
+                      <span className="mono-label mt-1 hidden text-muted md:block">{s.sub}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-2 h-2 bg-ink/10">
+                  <div className="h-full bg-signal transition-all duration-700 ease-out" style={{ width: `${(activeStep + 1) * 25}%` }} />
+                </div>
+                <p className="mono-label mt-3 text-muted">
+                  {activeStep < 3
+                    ? `Step ${activeStep + 1} of 4: ${["identity gate", "tier-priced cap", "escrow both legs", "closeout on the event"][activeStep]}`
+                    : "Closeout: lender covered, excess fail-closed to escrow until identity restores"}
+                </p>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* policy: terminal table */}

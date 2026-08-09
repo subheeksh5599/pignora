@@ -68,6 +68,31 @@ body::after {
   outline-offset: 3px;
 }
 
+/* mechanism pipeline steps */
+.step-cell {
+  border: 1px solid var(--color-line);
+  padding: 0.75rem 0.875rem;
+  transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
+}
+
+.step-cell.step-done {
+  background: var(--color-signal);
+  border-color: var(--color-signal);
+}
+
+.step-cell.step-done span {
+  color: var(--color-ink) !important;
+}
+
+.step-cell.step-on {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+}
+
+.step-cell.step-on span {
+  color: var(--color-signal) !important;
+}
+
 .skip-to-content {
   position: absolute;
   left: -9999px;
